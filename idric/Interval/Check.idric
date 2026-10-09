@@ -1,7 +1,6 @@
-module exact_interval.Tests
+module Interval.Check
 
 import Interval.Exact
-import exact_interval.Evidence
 
 %unbound_implicits off
 
