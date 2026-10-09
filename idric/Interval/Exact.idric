@@ -93,12 +93,12 @@ choice exact_interval one_of
 
 public export
 make_interval : lower_bound → upper_bound → exact_interval
-make_interval (lower_at lo loIn) (upper_at hi hiIn) =
+make_interval (lower_at lo lower_kind) (upper_at hi upper_kind) =
   if rational_less hi lo
     then no_points
-    else if rational_equal lo hi && not (is_included loIn && is_included hiIn)
+    else if rational_equal lo hi && not (is_included lower_kind && is_included upper_kind)
       then no_points
-      else points_between (lower_at lo loIn) (upper_at hi hiIn)
+      else points_between (lower_at lo lower_kind) (upper_at hi upper_kind)
 make_interval lo hi = points_between lo hi
 
 public export
@@ -144,22 +144,22 @@ open_right (points_between lo (upper_at hi _)) =
   make_interval lo (upper_at hi excluded)
 
 public export
-allowsLower : lower_bound → ExactRational → Bool
-allowsLower unbounded_below _ = True
-allowsLower (lower_at lo included) x = rational_less_or_equal lo x
-allowsLower (lower_at lo excluded) x = rational_less lo x
+lower_allows : lower_bound → ExactRational → Bool
+lower_allows unbounded_below _ = True
+lower_allows (lower_at lo included) x = rational_less_or_equal lo x
+lower_allows (lower_at lo excluded) x = rational_less lo x
 
 public export
-allowsUpper : upper_bound → ExactRational → Bool
-allowsUpper unbounded_above _ = True
-allowsUpper (upper_at hi included) x = rational_less_or_equal x hi
-allowsUpper (upper_at hi excluded) x = rational_less x hi
+upper_allows : upper_bound → ExactRational → Bool
+upper_allows unbounded_above _ = True
+upper_allows (upper_at hi included) x = rational_less_or_equal x hi
+upper_allows (upper_at hi excluded) x = rational_less x hi
 
 public export
 contains : exact_interval → ExactRational → Bool
 contains no_points _ = False
 contains (points_between lo hi) x =
-  allowsLower lo x && allowsUpper hi x
+  lower_allows lo x && upper_allows hi x
 
 public export
 same_inclusion : endpoint_membership → endpoint_membership → Bool
@@ -226,7 +226,7 @@ negate_interval no_points = no_points
 negate_interval (points_between lo hi) =
   make_interval (lower_of_negated_upper hi) (upper_of_negated_lower lo)
 
--- Ordinary make_interval subtraction loses repeated-expression correlation.
+-- Ordinary interval subtraction loses repeated-expression correlation.
 -- x:[0,1] and x-x evaluates to [-1,1] HERE, not the symbolic singleton 0.
 public export
 subtract_interval : exact_interval → exact_interval → exact_interval

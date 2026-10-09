@@ -1,0 +1,42 @@
+name: Idriç interval type acceptance
+
+on:
+  push:
+    paths:
+      - 'idric/**'
+      - 'intervals-idric.ipkg'
+      - '.github/workflows/idric-acceptance.yml'
+  pull_request:
+    paths:
+      - 'idric/**'
+      - 'intervals-idric.ipkg'
+      - '.github/workflows/idric-acceptance.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  idric-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Check out the exact Idriç compiler revision
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: isomorphisms/Idric
+          ref: 94dfd99bd3e376507fedc8611053b7173b2519f0
+          path: .toolchain/idric
+
+      - name: Bootstrap that Idriç compiler
+        run: sh .toolchain/idric/edric bootstrap
+
+      - name: Compile Idriç interval types and concrete proofs
+        shell: bash
+        run: |
+          export PATH="$GITHUB_WORKSPACE/.toolchain/idric/_/.tools/bin:$PATH"
+          .toolchain/idric/_/build/exec/idris2 --build intervals-idric.ipkg
+
+      - name: Run the Idriç checked fixture
+        run: ./build/exec/interval-idric-tests
