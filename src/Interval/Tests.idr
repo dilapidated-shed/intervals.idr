@@ -64,13 +64,13 @@ unbounded_excludes_endpoint :
 unbounded_excludes_endpoint = Refl
 
 empty_absorbs_addition :
-  intervalEqual (addInterval NoPoints allNumbers) NoPoints = True
+  intervalEqual (addInterval NoPoints Interval.Exact.allNumbers) NoPoints = True
 empty_absorbs_addition = Refl
 
 opposite_infinite_rays_sum_all :
   intervalEqual (addInterval (above (whole 0) Included)
                               (below (whole 0) Included))
-                allNumbers = True
+                Interval.Exact.allNumbers = True
 opposite_infinite_rays_sum_all = Refl
 
 intersection_open_boundary_empty :
@@ -104,22 +104,22 @@ missingMeasurement : BoundsKnowledge
 missingMeasurement = NoBounds [CalibrationNotEstablished] missingSource
 
 missing_cannot_be_fabricated :
-  unresolved (addKnowledge knownMeasurement missingMeasurement) = True
+  unresolved (addKnowledge Interval.Tests.knownMeasurement Interval.Tests.missingMeasurement) = True
 missing_cannot_be_fabricated = Refl
 
 missing_keeps_known_provenance :
   mentionsSource "example/data"
-    (sourceOf (addKnowledge knownMeasurement missingMeasurement)) = True
+    (sourceOf (addKnowledge Interval.Tests.knownMeasurement Interval.Tests.missingMeasurement)) = True
 missing_keeps_known_provenance = Refl
 
 missing_keeps_missing_provenance :
   mentionsSource "example/unknown-calibration"
-    (sourceOf (addKnowledge knownMeasurement missingMeasurement)) = True
+    (sourceOf (addKnowledge Interval.Tests.knownMeasurement Interval.Tests.missingMeasurement)) = True
 missing_keeps_missing_provenance = Refl
 
 known_sum_preserves_both_sources :
   mentionsSource "example/data"
-    (sourceOf (addKnowledge knownMeasurement knownMeasurement)) = True
+    (sourceOf (addKnowledge Interval.Tests.knownMeasurement Interval.Tests.knownMeasurement)) = True
 known_sum_preserves_both_sources = Refl
 
 main : IO ()
