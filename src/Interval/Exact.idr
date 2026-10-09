@@ -104,8 +104,8 @@ closed : Rat -> Rat -> Interval
 closed lo hi = interval (LowerAt lo Included) (UpperAt hi Included)
 
 public export
-open : Rat -> Rat -> Interval
-open lo hi = interval (LowerAt lo Excluded) (UpperAt hi Excluded)
+openInterval : Rat -> Rat -> Interval
+openInterval lo hi = interval (LowerAt lo Excluded) (UpperAt hi Excluded)
 
 public export
 leftOpen : Rat -> Rat -> Interval
