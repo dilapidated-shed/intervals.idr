@@ -122,5 +122,19 @@ known_sum_preserves_both_sources :
     (sourceOf (addKnowledge Interval.Tests.knownMeasurement Interval.Tests.knownMeasurement)) = True
 known_sum_preserves_both_sources = Refl
 
+
+-- A derived numerical interval must not erase its source bound's semantic kind.
+known_sum_retains_measurement_purpose :
+  mentionsMeaning MeasurementBound
+    (sourceOf (addKnowledge Interval.Tests.knownMeasurement
+                            Interval.Tests.knownMeasurement)) = True
+known_sum_retains_measurement_purpose = Refl
+
+missing_sum_retains_measurement_purpose :
+  mentionsMeaning MeasurementBound
+    (sourceOf (addKnowledge Interval.Tests.knownMeasurement
+                            Interval.Tests.missingMeasurement)) = True
+missing_sum_retains_measurement_purpose = Refl
+
 main : IO ()
 main = putStrLn "intervals.idr: checked exact interval and provenance fixtures"

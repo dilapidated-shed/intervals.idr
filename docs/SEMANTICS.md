@@ -24,7 +24,7 @@ The rational denominator is positive by construction (`OnePlus n` represents `n+
 - `HasBounds meaning range provenance`: an explicitly asserted bound with a reason for its existence;
 - `NoBounds reasons provenance`: the bound is missing or unjustified.
 
-`NoBounds` is **not** `NoPoints`, **not** the entire real line, and **not** the singleton zero. Adding an unknown bound to another claim remains unknown and preserves both provenance trees. A returned interval is not automatically a statistical confidence interval.
+`NoBounds` is **not** `NoPoints`, **not** the entire real line, and **not** the singleton zero. Adding an unknown bound to another claim remains unknown and preserves both provenance trees and the purposes of any known input bounds. A returned interval is not automatically a statistical confidence interval.
 
 Keep separate:
 

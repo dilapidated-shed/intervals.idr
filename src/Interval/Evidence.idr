@@ -4,6 +4,14 @@ import Interval.Exact
 
 %default total
 
+public export
+data BoundsMeaning
+  = FeasibleSet
+  | ToleranceBound
+  | MeasurementBound
+  | ModelConditionalBound
+  | DerivedEnclosure
+
 -- A provenance tree deliberately retains BOTH inputs. It is not a generic
 -- confidence score and is not a substitute for empirical calibration.
 public export
@@ -16,6 +24,7 @@ data SourceKind
 public export
 data Provenance
   = From SourceKind String
+  | Classified BoundsMeaning Provenance
   | Derived String Provenance Provenance
 
 public export
@@ -27,14 +36,6 @@ data MissingReason
   | NumericalEnclosureNotEstablished
   | OtherReason String
 
-public export
-data BoundsMeaning
-  = FeasibleSet
-  | ToleranceBound
-  | MeasurementBound
-  | ModelConditionalBound
-  | DerivedEnclosure
-
 -- NoBounds is NOT [0,0], the empty set, an unbounded interval, or a prior.
 -- These have different meanings. A provenance tree survives through arithmetic.
 public export
@@ -45,7 +46,7 @@ data BoundsKnowledge
 public export
 sourceOf : BoundsKnowledge -> Provenance
 sourceOf (NoBounds _ source) = source
-sourceOf (HasBounds _ _ source) = source
+sourceOf (HasBounds meaning _ source) = Classified meaning source
 
 public export
 unresolved : BoundsKnowledge -> Bool
@@ -68,14 +69,36 @@ addKnowledge (NoBounds reasons leftSource) right =
 addKnowledge left (NoBounds reasons rightSource) =
   NoBounds reasons
            (Derived "interval addition unavailable" (sourceOf left) rightSource)
-addKnowledge (HasBounds _ left leftSource) (HasBounds _ right rightSource) =
+addKnowledge (HasBounds leftMeaning left leftSource) (HasBounds rightMeaning right rightSource) =
   HasBounds DerivedEnclosure (addInterval left right)
-            (Derived "Minkowski addition" leftSource rightSource)
+            (Derived "Minkowski addition"
+              (Classified leftMeaning leftSource)
+              (Classified rightMeaning rightSource))
 
 -- Provenance is inspectable; copying the result never implicitly supplies an
 -- independence assumption or upgrades a model-derived bound to a measurement.
 public export
 mentionsSource : String -> Provenance -> Bool
 mentionsSource wanted (From _ source) = wanted == source
+mentionsSource wanted (Classified _ source) = mentionsSource wanted source
 mentionsSource wanted (Derived _ left right) =
   mentionsSource wanted left || mentionsSource wanted right
+
+-- Bound purposes survive arithmetic inside the derivation tree.  In particular
+-- a model-conditional bound cannot silently become measured evidence.
+public export
+sameMeaning : BoundsMeaning -> BoundsMeaning -> Bool
+sameMeaning FeasibleSet FeasibleSet = True
+sameMeaning ToleranceBound ToleranceBound = True
+sameMeaning MeasurementBound MeasurementBound = True
+sameMeaning ModelConditionalBound ModelConditionalBound = True
+sameMeaning DerivedEnclosure DerivedEnclosure = True
+sameMeaning _ _ = False
+
+public export
+mentionsMeaning : BoundsMeaning -> Provenance -> Bool
+mentionsMeaning _ (From _ _) = False
+mentionsMeaning expected (Classified actual source) =
+  sameMeaning expected actual || mentionsMeaning expected source
+mentionsMeaning expected (Derived _ left right) =
+  mentionsMeaning expected left || mentionsMeaning expected right
