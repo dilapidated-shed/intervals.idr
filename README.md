@@ -1,8 +1,10 @@
 # intervals.idr
 
-Exact intervals and typed missing-bound/provenance semantics for eventual integration with [Idriç](https://github.com/isomorphisms/Idric) and [Econometrician-in-a-Box](https://github.com/bl4ckb4ll/econometrician).
+An exact rational interval library and an optional, small evidence wrapper, intended for eventual use by [Idriç](https://github.com/isomorphisms/Idric) and [Econometrician-in-a-Box](https://github.com/bl4ckb4ll/econometrician). The library is a concrete numerical/type-system convenience, comparable to units of measure; it is **not a foundation for incomplete knowledge**.
 
-An **interval** represents a set of possible values. By itself, it is not a probability distribution, confidence interval, credible interval, measurement claim, or evidence of Gaussian error. `NoBounds` records missing information without substituting zero, the empty interval, an unbounded interval, or a guessed prior.
+An **interval** represents a connected, convex subset of an ordered line, potentially empty or unbounded. It is useful even when the quantities are exactly known; it is not inherently a model of ignorance. By itself, it is not a probability distribution, confidence interval, credible interval, measurement claim, or evidence of Gaussian error. `NoBounds` records missing information without substituting zero, the empty interval, an unbounded interval, or a guessed prior.
+
+Broader uncertainty might require indefinitely many interacting or nested ε-like regions, with unknown resolution conditions and even unknown nesting depth, and cannot be assumed to reduce to linear intervals, finite trees, or a chosen probability distribution. No such general theory is claimed here.
 
 ## Initial implementation
 
