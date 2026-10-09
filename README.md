@@ -6,7 +6,14 @@ An **interval** represents a connected, convex subset of an ordered line, potent
 
 Broader uncertainty might require indefinitely many interacting or nested ε-like regions, with unknown resolution conditions and even unknown nesting depth, and cannot be assumed to reduce to linear intervals, finite trees, or a chosen probability distribution. No such general theory is claimed here.
 
-## Initial implementation
+## Maintained Idriç source
+
+- `idric/Interval/Exact.idric`: canonical Idriç interval library.
+- `idric/Interval/Check.idric`: concrete propositions checked by Idriç.
+- `intervals-idric.ipkg`: current-language package.
+- `docs/IDRIC-PRIMARY.md`: language ownership and verification boundary.
+
+## Idris 2 compatibility prototype
 
 - `src/Interval/Exact.idr`: exact rationals with structurally positive denominator; finite/unbounded endpoints, open/closed membership, emptiness, Minkowski addition, interval subtraction, and intersection.
 - `src/Interval/Evidence.idr`: distinguishes explicitly reported bounds from unavailable bounds and retains source identities through addition.
@@ -14,9 +21,9 @@ Broader uncertainty might require indefinitely many interacting or nested ε-lik
 - `docs/SEMANTICS.md`: mathematical assumptions, distinctions from statistical intervals, and known limitations.
 - `docs/IDRIC.md`: intended bridge to the **current** Idriç language, not a claimed compiler integration.
 
-The code here uses Idris 2 **compatibility** syntax (`.idr`). It is not a claim that the maintained Idriç compiler has accepted `.idric` source or produced a machine executable.
+The `.idr` files under `src/` are legacy compatibility tests, not the maintained API. A passing generic Idris 2 build is not evidence that the Idriç source compiled or that a direct target backend ran.
 
-## Check
+## Legacy compatibility check
 
 With Idris 2 and its standard library installed:
 

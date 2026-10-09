@@ -1,0 +1,264 @@
+module Interval.Exact
+
+%unbound_implicits off
+
+-- Exact ordered scalar.  A denominator is positive BY CONSTRUCTION.
+-- No binary-float conversion or unproved rounding occurs in this module.
+public export
+data PositiveDenominator = OnePlus Number
+
+public export
+denominator_value : PositiveDenominator → ±Number
+denominator_value (OnePlus n) = cast (S n)
+
+public export
+multiply_denominators : PositiveDenominator → PositiveDenominator → PositiveDenominator
+multiply_denominators (OnePlus a) (OnePlus b) = OnePlus (a + b + a × b)
+
+public export
+data ExactRational = Ratio ±Number PositiveDenominator
+
+public export
+whole : ±Number → ExactRational
+whole numerator = Ratio numerator (OnePlus 0)
+
+-- 'over 1 (OnePlus 3)' denotes 1/4. The successor avoids zero denominators.
+public export
+over : ±Number → PositiveDenominator → ExactRational
+over = Ratio
+
+public export
+add_rational : ExactRational → ExactRational → ExactRational
+add_rational (Ratio a b) (Ratio c d) =
+  Ratio (a × denominator_value d + c × denominator_value b)
+        (multiply_denominators b d)
+
+public export
+negate_rational : ExactRational → ExactRational
+negate_rational (Ratio a b) = Ratio (0 − a) b
+
+public export
+subtract_rational : ExactRational → ExactRational → ExactRational
+subtract_rational a b = add_rational a (negate_rational b)
+
+public export
+rational_equal : ExactRational → ExactRational → Bool
+rational_equal (Ratio a b) (Ratio c d) =
+  a × denominator_value d ≟ c × denominator_value b
+
+public export
+rational_less : ExactRational → ExactRational → Bool
+rational_less (Ratio a b) (Ratio c d) =
+  a × denominator_value d < c × denominator_value b
+
+public export
+rational_less_or_equal : ExactRational → ExactRational → Bool
+rational_less_or_equal x y = rational_less x y || rational_equal x y
+
+-- Endpoint inclusion is data, not a nilpotent epsilon.
+public export
+choice endpoint_membership one_of
+  included
+  excluded
+
+public export
+is_included : endpoint_membership → Bool
+is_included included = True
+is_included excluded = False
+
+public export
+both_included : endpoint_membership → endpoint_membership → endpoint_membership
+both_included included included = included
+both_included _ _ = excluded
+
+public export
+data LowerBound
+  = unbounded_below
+  | lower_at ExactRational endpoint_membership
+
+public export
+data UpperBound
+  = upper_at ExactRational endpoint_membership
+  | unbounded_above
+
+-- Construct ordinary intervals via 'interval' or the convenience functions.
+-- For this initial compatibility kernel constructors are visible. Users of the
+-- public API should not construct points_between directly: that would bypass
+-- validation of reversed/open-singleton bounds. Proof-carrying constructors
+-- remain a separate elaboration question for the Idriç integration.
+public export
+data exact_interval
+  = no_points
+  | points_between LowerBound UpperBound
+
+public export
+interval : LowerBound → UpperBound → exact_interval
+interval (lower_at lo loIn) (upper_at hi hiIn) =
+  if rational_less hi lo
+    then no_points
+    else if rational_equal lo hi && not (is_included loIn && is_included hiIn)
+      then no_points
+      else points_between (lower_at lo loIn) (upper_at hi hiIn)
+interval lo hi = points_between lo hi
+
+public export
+closed_interval : ExactRational → ExactRational → exact_interval
+closed_interval lo hi = interval (lower_at lo included) (upper_at hi included)
+
+public export
+open_interval : ExactRational → ExactRational → exact_interval
+open_interval lo hi = interval (lower_at lo excluded) (upper_at hi excluded)
+
+public export
+left_open_interval : ExactRational → ExactRational → exact_interval
+left_open_interval lo hi = interval (lower_at lo excluded) (upper_at hi included)
+
+public export
+right_open_interval : ExactRational → ExactRational → exact_interval
+right_open_interval lo hi = interval (lower_at lo included) (upper_at hi excluded)
+
+public export
+all_numbers : exact_interval
+all_numbers = interval unbounded_below unbounded_above
+
+public export
+below : ExactRational → endpoint_membership → exact_interval
+below upper inclusion = interval unbounded_below (upper_at upper inclusion)
+
+public export
+above : ExactRational → endpoint_membership → exact_interval
+above lower inclusion = interval (lower_at lower inclusion) unbounded_above
+
+public export
+openLeft : exact_interval → exact_interval
+openLeft no_points = no_points
+openLeft (points_between unbounded_below hi) = points_between unbounded_below hi
+openLeft (points_between (lower_at lo _) hi) =
+  interval (lower_at lo excluded) hi
+
+public export
+openRight : exact_interval → exact_interval
+openRight no_points = no_points
+openRight (points_between lo unbounded_above) = points_between lo unbounded_above
+openRight (points_between lo (upper_at hi _)) =
+  interval lo (upper_at hi excluded)
+
+public export
+allowsLower : LowerBound → ExactRational → Bool
+allowsLower unbounded_below _ = True
+allowsLower (lower_at lo included) x = rational_less_or_equal lo x
+allowsLower (lower_at lo excluded) x = rational_less lo x
+
+public export
+allowsUpper : UpperBound → ExactRational → Bool
+allowsUpper unbounded_above _ = True
+allowsUpper (upper_at hi included) x = rational_less_or_equal x hi
+allowsUpper (upper_at hi excluded) x = rational_less x hi
+
+public export
+contains : exact_interval → ExactRational → Bool
+contains no_points _ = False
+contains (points_between lo hi) x =
+  allowsLower lo x && allowsUpper hi x
+
+public export
+same_inclusion : endpoint_membership → endpoint_membership → Bool
+same_inclusion included included = True
+same_inclusion excluded excluded = True
+same_inclusion _ _ = False
+
+public export
+same_lower : LowerBound → LowerBound → Bool
+same_lower unbounded_below unbounded_below = True
+same_lower (lower_at x i) (lower_at y j) =
+  rational_equal x y && same_inclusion i j
+same_lower _ _ = False
+
+public export
+same_upper : UpperBound → UpperBound → Bool
+same_upper unbounded_above unbounded_above = True
+same_upper (upper_at x i) (upper_at y j) =
+  rational_equal x y && same_inclusion i j
+same_upper _ _ = False
+
+public export
+interval_equal : exact_interval → exact_interval → Bool
+interval_equal no_points no_points = True
+interval_equal (points_between lo hi) (points_between lo2 hi2) =
+  same_lower lo lo2 && same_upper hi hi2
+interval_equal _ _ = False
+
+-- Set-valued/Minkowski addition. No probabilistic independence is assumed.
+public export
+add_lower : LowerBound → LowerBound → LowerBound
+add_lower unbounded_below _ = unbounded_below
+add_lower _ unbounded_below = unbounded_below
+add_lower (lower_at a i) (lower_at b j) =
+  lower_at (add_rational a b) (both_included i j)
+
+public export
+add_upper : UpperBound → UpperBound → UpperBound
+add_upper unbounded_above _ = unbounded_above
+add_upper _ unbounded_above = unbounded_above
+add_upper (upper_at a i) (upper_at b j) =
+  upper_at (add_rational a b) (both_included i j)
+
+public export
+add_interval : exact_interval → exact_interval → exact_interval
+add_interval no_points _ = no_points
+add_interval _ no_points = no_points
+add_interval (points_between a b) (points_between c d) =
+  interval (add_lower a c) (add_upper b d)
+
+public export
+lower_of_negated_upper : UpperBound → LowerBound
+lower_of_negated_upper unbounded_above = unbounded_below
+lower_of_negated_upper (upper_at x i) = lower_at (negate_rational x) i
+
+public export
+upper_of_negated_lower : LowerBound → UpperBound
+upper_of_negated_lower unbounded_below = unbounded_above
+upper_of_negated_lower (lower_at x i) = upper_at (negate_rational x) i
+
+public export
+negate_interval : exact_interval → exact_interval
+negate_interval no_points = no_points
+negate_interval (points_between lo hi) =
+  interval (lower_of_negated_upper hi) (upper_of_negated_lower lo)
+
+-- Ordinary interval subtraction loses repeated-expression correlation.
+-- x:[0,1] and x-x evaluates to [-1,1] HERE, not the symbolic singleton 0.
+public export
+subtract_interval : exact_interval → exact_interval → exact_interval
+subtract_interval a b = add_interval a (negate_interval b)
+
+-- Intersection of sets, including coincident open/closed_interval endpoints.
+-- This is restriction by known bounds, NOT statistical conditioning.
+public export
+stronger_lower : LowerBound → LowerBound → LowerBound
+stronger_lower unbounded_below b = b
+stronger_lower a unbounded_below = a
+stronger_lower (lower_at a ai) (lower_at b bi) =
+  if rational_less a b
+     then lower_at b bi
+     else if rational_less b a
+       then lower_at a ai
+       else lower_at a (both_included ai bi)
+
+public export
+stronger_upper : UpperBound → UpperBound → UpperBound
+stronger_upper unbounded_above b = b
+stronger_upper a unbounded_above = a
+stronger_upper (upper_at a ai) (upper_at b bi) =
+  if rational_less a b
+     then upper_at a ai
+     else if rational_less b a
+       then upper_at b bi
+       else upper_at a (both_included ai bi)
+
+public export
+intersect_interval : exact_interval → exact_interval → exact_interval
+intersect_interval no_points _ = no_points
+intersect_interval _ no_points = no_points
+intersect_interval (points_between lo hi) (points_between lo2 hi2) =
+  interval (stronger_lower lo lo2) (stronger_upper hi hi2)
