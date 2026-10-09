@@ -1,0 +1,22 @@
+name: Reference source integrity
+
+on:
+  push:
+    paths:
+      - 'reference-code/**'
+      - '.github/workflows/reference-integrity.yml'
+  pull_request:
+    paths:
+      - 'reference-code/**'
+      - '.github/workflows/reference-integrity.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  check-source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Verify pinned code and original upstream license
+        run: python3 reference-code/verify.py

@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "recorded_date": "2026-10-09",
+  "note": "Unmodified source snapshots. Their proofs belong to their upstream libraries; they do not establish correctness of this repository's Idris modules.",
+  "vendored": [
+    {
+      "local_path": "reference-code/mathlib4/Mathlib/Order/Interval/Set/Defs.lean",
+      "source_repo": "leanprover-community/mathlib4",
+      "revision": "bfe80ca14530f46f85728288be5ec7c24777c313",
+      "source_path": "Mathlib/Order/Interval/Set/Defs.lean",
+      "license": "Apache-2.0",
+      "purpose": "Definitions and membership of finite/open/unbounded intervals",
+      "git_blob_sha1": "8339a912635b3750576fe13a88d1ca17b7d44eb0",
+      "upstream_url": "https://github.com/leanprover-community/mathlib4/blob/bfe80ca14530f46f85728288be5ec7c24777c313/Mathlib/Order/Interval/Set/Defs.lean"
+    },
+    {
+      "local_path": "reference-code/mathlib4/Mathlib/Order/Interval/Set/Basic.lean",
+      "source_repo": "leanprover-community/mathlib4",
+      "revision": "bfe80ca14530f46f85728288be5ec7c24777c313",
+      "source_path": "Mathlib/Order/Interval/Set/Basic.lean",
+      "license": "Apache-2.0",
+      "purpose": "Endpoint membership and emptiness/subset lemmas",
+      "git_blob_sha1": "f46b6f04ecd575d91055446e912fffdcd243c6c8",
+      "upstream_url": "https://github.com/leanprover-community/mathlib4/blob/bfe80ca14530f46f85728288be5ec7c24777c313/Mathlib/Order/Interval/Set/Basic.lean"
+    },
+    {
+      "local_path": "reference-code/mathlib4/Mathlib/Algebra/Order/Group/Pointwise/Interval.lean",
+      "source_repo": "leanprover-community/mathlib4",
+      "revision": "bfe80ca14530f46f85728288be5ec7c24777c313",
+      "source_path": "Mathlib/Algebra/Order/Group/Pointwise/Interval.lean",
+      "license": "Apache-2.0",
+      "purpose": "Pointwise interval arithmetic inclusions; additive statements via to_additive",
+      "git_blob_sha1": "1e46d9a2b17384e407c32050443f9a595256ce9a",
+      "upstream_url": "https://github.com/leanprover-community/mathlib4/blob/bfe80ca14530f46f85728288be5ec7c24777c313/Mathlib/Algebra/Order/Group/Pointwise/Interval.lean"
+    },
+    {
+      "local_path": "reference-code/afp/thys/Interval_Analysis/Inclusion_Isotonicity.thy",
+      "source_repo": "isabelle-prover/mirror-afp-devel",
+      "revision": "80985fd56a4cb63a90176bf4bfe456eaff949bfd",
+      "source_path": "thys/Interval_Analysis/Inclusion_Isotonicity.thy",
+      "license": "BSD (AFP entry)",
+      "purpose": "Inclusion-isotone interval functions",
+      "git_blob_sha1": "188f3100f5a0766915920c5bc213c311d5c59c2d",
+      "upstream_url": "https://github.com/isabelle-prover/mirror-afp-devel/blob/80985fd56a4cb63a90176bf4bfe456eaff949bfd/thys/Interval_Analysis/Inclusion_Isotonicity.thy"
+    },
+    {
+      "local_path": "reference-code/afp/thys/Interval_Analysis/Extended_Interval_Division.thy",
+      "source_repo": "isabelle-prover/mirror-afp-devel",
+      "revision": "80985fd56a4cb63a90176bf4bfe456eaff949bfd",
+      "source_path": "thys/Interval_Analysis/Extended_Interval_Division.thy",
+      "license": "BSD (AFP entry)",
+      "purpose": "Division and reciprocal behavior with extended bounds",
+      "git_blob_sha1": "df77494e05e3a6477536ae7412127ba73e23dbaa",
+      "upstream_url": "https://github.com/isabelle-prover/mirror-afp-devel/blob/80985fd56a4cb63a90176bf4bfe456eaff949bfd/thys/Interval_Analysis/Extended_Interval_Division.thy"
+    },
+    {
+      "local_path": "reference-code/afp/thys/Affine_Arithmetic/Affine_Form.thy",
+      "source_repo": "isabelle-prover/mirror-afp-devel",
+      "revision": "80985fd56a4cb63a90176bf4bfe456eaff949bfd",
+      "source_path": "thys/Affine_Arithmetic/Affine_Form.thy",
+      "license": "BSD (AFP entry)",
+      "purpose": "Affine arithmetic with shared noise terms, a reference for dependency",
+      "git_blob_sha1": "54c5b517b8771da9c8ad613f0104a687d621b508",
+      "upstream_url": "https://github.com/isabelle-prover/mirror-afp-devel/blob/80985fd56a4cb63a90176bf4bfe456eaff949bfd/thys/Affine_Arithmetic/Affine_Form.thy"
+    }
+  ],
+  "license_files": [
+    {
+      "path": "reference-code/mathlib4/LICENSE",
+      "source_repo": "leanprover-community/mathlib4",
+      "revision": "bfe80ca14530f46f85728288be5ec7c24777c313",
+      "source_path": "LICENSE",
+      "git_blob_sha1": "8dada3edaf50dbc082c9a125058f25def75e625a"
+    }
+  ],
+  "optional_sources": [
+    {
+      "key": "nasa-interval-definitions",
+      "repo": "nasa/pvslib",
+      "revision": "b54fa2a1791a5dc96603f8c97a161263a5621257",
+      "path": "interval_arith/interval.pvs",
+      "url": "https://raw.githubusercontent.com/nasa/pvslib/b54fa2a1791a5dc96603f8c97a161263a5621257/interval_arith/interval.pvs",
+      "git_blob_sha1": "e073d4cf149e843addd17b70ae47382c64be67b9",
+      "destination": "external/pvslib/interval.pvs",
+      "reason": "NASA interval representation; no snapshot copied because NASALib requests per-development licensing review"
+    },
+    {
+      "key": "nasa-fundamental-theorem",
+      "repo": "nasa/pvslib",
+      "revision": "b54fa2a1791a5dc96603f8c97a161263a5621257",
+      "path": "interval_arith/interval_expr.pvs",
+      "url": "https://raw.githubusercontent.com/nasa/pvslib/b54fa2a1791a5dc96603f8c97a161263a5621257/interval_arith/interval_expr.pvs",
+      "git_blob_sha1": "7d7aae89c9dc82d8ad0183e81be07699dd4bae66",
+      "destination": "external/pvslib/interval_expr.pvs",
+      "reason": "Contains Eval_fundamental and Eval_inclusion statements; snapshot retrieval is opt-in"
+    },
+    {
+      "key": "nasa-proof-record",
+      "repo": "nasa/pvslib",
+      "revision": "b54fa2a1791a5dc96603f8c97a161263a5621257",
+      "path": "interval_arith/interval_expr.prf",
+      "url": "https://raw.githubusercontent.com/nasa/pvslib/b54fa2a1791a5dc96603f8c97a161263a5621257/interval_arith/interval_expr.prf",
+      "git_blob_sha1": "89f7889b1dc6d70bc37b87ba03689c1e98acd204",
+      "destination": "external/pvslib/interval_expr.prf",
+      "reason": "Associated PVS proof record; requires PVS/NASALib to replay"
+    },
+    {
+      "key": "coq-interval-release",
+      "repo": "coqinterval/interval (GitLab; release archive)",
+      "revision": "4.11.4",
+      "path": "interval-4.11.4.tar.gz",
+      "url": "https://coqinterval.gitlabpages.inria.fr/releases/interval-4.11.4.tar.gz",
+      "sha512": "5b2ccff32c3d6caa9002455dc472d6c4c8f70337581d038ca432dd92ed90b262b203960a2a62896c12992be2ff2436bf7e6a8ffd3aec625859f47088d262ef00",
+      "destination": "external/coq-interval/interval-4.11.4.tar.gz",
+      "license": "CeCILL-C",
+      "reason": "Release archive pinned by rocq-prover/opam metadata; optional rather than vendored"
+    }
+  ]
+}
