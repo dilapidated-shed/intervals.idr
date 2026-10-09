@@ -17,7 +17,7 @@ plus_open :
   intervalEqual
     (addInterval (rightOpen (whole 1) (whole 3))
                  (leftOpen (whole 4) (whole 9)))
-    (open (whole 5) (whole 12)) = True
+    (openInterval (whole 5) (whole 12)) = True
 plus_open = Refl
 
 subtract_extremes :
@@ -36,7 +36,7 @@ dependency_is_lost :
 dependency_is_lost = Refl
 
 empty_open_singleton :
-  intervalEqual (open (whole 1) (whole 1)) NoPoints = True
+  intervalEqual (openInterval (whole 1) (whole 1)) NoPoints = True
 empty_open_singleton = Refl
 
 empty_inverted :
