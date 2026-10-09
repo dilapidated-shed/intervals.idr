@@ -1,6 +1,12 @@
 # Semantics and boundaries
 
-Status: first implementation on the `prelude/exact-intervals-evidence` branch. The Idris 2 compatibility source and its proofs are **not verified** until an actual compiler run on this commit is recorded. No maintained Idriç backend execution is claimed.
+Status: Idris 2 compatibility sources and their concrete `Refl` fixtures compiled, and the test program executed on commit `622328d0` in [CI run 37964371440](https://github.com/dilapidated-shed/intervals.idr/actions/runs/37964371440). These are **not general correctness proofs**. No maintained Idriç backend execution is claimed.
+
+## Scope: a useful special case, not a theory of ignorance
+
+Intervals are low-complexity, high-value mathematical types, like units of measure. The fact that an interval can encode a finite range of possible values **does not make it the foundational representation of not knowing**. Such a foundation is a separate, open inquiry.
+
+In particular, an exploratory model involving arbitrarily many ε-like regions, potentially unknown or recursive containment depth (`((•))`, `(((((•)))))`), unknown resolution conditions, interactions between regions, and unknown unknowns cannot be assumed to reduce to this library's one-dimensional interval structure. Nothing here assumes those ε objects are nilpotent dual numbers, ordinary interval widths, probability distributions, or a fixed-depth tree. Nor does this library model the distortion or strategic presentation of knowledge through propaganda or marketing. Do not force any of these phenomena into `NoBounds` or `HasBounds` simply for convenience.
 
 ## What an interval means
 
@@ -46,7 +52,7 @@ The above table is an ownership/semantic map, **not** a list of implemented cons
 
 ## Ownership
 
-- `intervals.idr`: exact linear-set interval kernel, explicit missing bounds/provenance, unit-agnostic API. Later: indexed quantities, proof-preserving enclosure, dependency and typed statistical reports.
+- `intervals.idr`: exact linear-set interval kernel, explicit missing bounds/provenance, unit-agnostic API. Later: indexed quantities, proof-preserving enclosure and selected numerical operations; statistical reports belong in a statistical consumer unless a specific reusable kernel justifies inclusion.
 - [Idriç](https://github.com/isomorphisms/Idric): formalized public type semantics, checking/elaboration, compiler and backend acceptance; the checked language must not silently erase uncertainty.
 - [Econometrician-in-a-Box](https://github.com/bl4ckb4ll/econometrician): observations, acquisition/source graph, sampling design, calibration, estimation, conditioning, inference, identification and report semantics. A Python or R numerical oracle does not certify an Idriç execution.
 - [Geofence](https://github.com/dilapidated-shed/geofence): may import linear bounds, but longitude/bearing/time-of-day wrap must use an **arc/circular** object, not a fake linear `[start,end]`.
@@ -58,4 +64,4 @@ The above table is an ownership/semantic map, **not** a list of implemented cons
 3. Preserve units/dimensions by lifting the interval functor over an ordered `Quantity dimension`, rather than erasing dimensionality to a raw rational.
 4. Design finite-precision enclosure with actual directed rounding; Float16 and Float32 are distinct and must not silently pass through host `Double`.
 5. Only add statistical interval constructors after required study/design/provenance data can be represented. No probability normalization by default.
-6. Later typed uncertainty should preserve physical/source, representation, arithmetic, truncation, display rounding, model branch and derivative-layer status. Unknown empirical error remains unresolved.
+6. Treat all higher-order uncertainty, unknown containment structures, source manipulation and incomplete model knowledge as outside this module. Do not imply interval arithmetic solves them.
