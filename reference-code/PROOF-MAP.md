@@ -13,14 +13,10 @@ The upstream systems below already provide nontrivial proofs. Their statements a
 | General real-expression enclosure | NASALib PVS `interval_expr.pvs`: `Eval_fundamental`, `Eval_inclusion`; proof evidence in `interval_expr.prf` | Connect an expression's concrete evaluation and interval interpretation to a soundness theorem for Idriç |
 | Correct finite-precision interval arithmetic | Coq/Rocq Interval, verified bounds and floating-point support; NASALib interval strategies | Implement correctly rounded Float16/Float32 directed endpoints in a maintained Idriç backend; no host-Double substitution |
 
-## Epistemic correctness is another theorem family
+## Deliberate boundary
 
-The reference mathematics does not automatically prove that an observation, a bound, a confidence interval, or a Bayesian credible interval has the claimed empirical interpretation.
+Intervals are an elementary mathematical type, comparable in programming value to units of measure. The goal here is to learn from mature proofs of interval arithmetic, **not** to claim intervals are a general type for ignorance.
 
-An intended information-preservation theorem for future work is:
+Unknown unknowns, arbitrarily nested or interacting ε-like regions, unknown resolution conditions, and strategic manipulation of information are distinct research topics. They are not modeled by the reference implementations here, and this folder must not dictate their representation.
 
-1. Every derived `HasBounds` result retains an inspectable provenance path to its inputs and their bound meanings.
-2. `NoBounds` caused by an unestablished measurement, model or calibration does not silently become a known bound.
-3. Derived set inclusion does not imply statistical coverage. A confidence-interval statement requires a sampling design and a coverage theorem; Bayesian credible intervals require a posterior/model.
-
-Our current tests check specific reductions with `Refl`, **not universal theorems** and not empirical model calibration.
+The local Idris and Idriç `Refl` examples establish only particular reductions, not the universal interval theorems described above.
