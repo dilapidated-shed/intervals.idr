@@ -1,0 +1,19 @@
+name: Exact interval check
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  idris2-compatibility:
+    runs-on: ubuntu-latest
+    container: ghcr.io/stefan-hoeck/idris2-pack:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile Idris 2 proofs
+        run: idris2 --build intervals.ipkg
+      - name: Execute checked test program
+        run: ./build/exec/interval-tests
