@@ -2,6 +2,9 @@ module Interval.DivisionCheck
 
 import Interval.Division
 import Interval.Exact
+import Interval.Product
+import Interval.Reciprocal
+import Interval.Relation
 
 %unbound_implicits off
 
