@@ -92,7 +92,49 @@ sum_upper_endpoint_is_member =
   closed_difference_upper_is_member
     (add_closed_difference_intervals first_interval second_interval)
 
--- The theorem remains open in both intervals and both member values.
+negated_four_is_enclosed :
+  ClosedDifferenceMember
+    (negate_difference four)
+    (negate_closed_difference_interval second_interval)
+negated_four_is_enclosed =
+  negation_encloses_closed_member
+    second_interval
+    four
+    four_is_in_second
+
+example_difference_is_enclosed :
+  ClosedDifferenceMember
+    (subtract_difference minus_one four)
+    (subtract_closed_difference_intervals
+      first_interval
+      second_interval)
+example_difference_is_enclosed =
+  subtraction_encloses_closed_members
+    first_interval
+    second_interval
+    minus_one
+    four
+    minus_one_is_in_first
+    four_is_in_second
+
+-- Negating [2,5] produces [-5,-2], so both reversed endpoints are members.
+negated_lower_endpoint_is_member :
+  ClosedDifferenceMember
+    (negate_difference five)
+    (negate_closed_difference_interval second_interval)
+negated_lower_endpoint_is_member =
+  closed_difference_lower_is_member
+    (negate_closed_difference_interval second_interval)
+
+negated_upper_endpoint_is_member :
+  ClosedDifferenceMember
+    (negate_difference two)
+    (negate_closed_difference_interval second_interval)
+negated_upper_endpoint_is_member =
+  closed_difference_upper_is_member
+    (negate_closed_difference_interval second_interval)
+
+-- The theorems remain open in intervals and member values.
 addition_enclosure_open :
   (left_interval, right_interval : ClosedDifferenceInterval) →
   (left_member, right_member : SignedDifference) →
@@ -102,3 +144,22 @@ addition_enclosure_open :
     (add_difference left_member right_member)
     (add_closed_difference_intervals left_interval right_interval)
 addition_enclosure_open = addition_encloses_closed_members
+
+negation_enclosure_open :
+  (interval : ClosedDifferenceInterval) →
+  (member : SignedDifference) →
+  ClosedDifferenceMember member interval →
+  ClosedDifferenceMember
+    (negate_difference member)
+    (negate_closed_difference_interval interval)
+negation_enclosure_open = negation_encloses_closed_member
+
+subtraction_enclosure_open :
+  (left_interval, right_interval : ClosedDifferenceInterval) →
+  (left_member, right_member : SignedDifference) →
+  ClosedDifferenceMember left_member left_interval →
+  ClosedDifferenceMember right_member right_interval →
+  ClosedDifferenceMember
+    (subtract_difference left_member right_member)
+    (subtract_closed_difference_intervals left_interval right_interval)
+subtraction_enclosure_open = subtraction_encloses_closed_members

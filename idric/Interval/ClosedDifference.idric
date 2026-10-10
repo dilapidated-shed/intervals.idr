@@ -58,6 +58,30 @@ add_closed_difference_intervals
           right_validity)
 
 public export
+negate_closed_difference_interval :
+  ClosedDifferenceInterval →
+  ClosedDifferenceInterval
+negate_closed_difference_interval
+  (ClosedDifferenceSpan lower upper validity) =
+    ClosedDifferenceSpan
+      (negate_difference upper)
+      (negate_difference lower)
+      (difference_negate_reverses_order
+        lower
+        upper
+        validity)
+
+public export
+subtract_closed_difference_intervals :
+  ClosedDifferenceInterval →
+  ClosedDifferenceInterval →
+  ClosedDifferenceInterval
+subtract_closed_difference_intervals left right =
+  add_closed_difference_intervals
+    left
+    (negate_closed_difference_interval right)
+
+public export
 closed_difference_lower_is_member :
   (interval : ClosedDifferenceInterval) →
   ClosedDifferenceMember
@@ -91,7 +115,7 @@ closed_difference_upper_is_member
 
 -- Universal soundness of closed-interval endpoint addition: any two members
 -- add to a member of the interval formed by adding the two lower and two upper
--- endpoints. This is the first general interval-enclosure theorem in the repo.
+-- endpoints.
 public export
 addition_encloses_closed_members :
   (left_interval, right_interval : ClosedDifferenceInterval) →
@@ -151,3 +175,70 @@ addition_encloses_closed_members
           right_upper
           left_upper_evidence
           right_upper_evidence)
+
+-- Negation reverses both endpoint inequalities. Thus membership of x in
+-- [lower, upper] gives membership of -x in [-upper, -lower].
+public export
+negation_encloses_closed_member :
+  (interval : ClosedDifferenceInterval) →
+  (member : SignedDifference) →
+  ClosedDifferenceMember member interval →
+  ClosedDifferenceMember
+    (negate_difference member)
+    (negate_closed_difference_interval interval)
+negation_encloses_closed_member
+  (ClosedDifferenceSpan lower upper validity)
+  member
+  (InsideClosedDifference
+    _
+    _
+    _
+    _
+    lower_evidence
+    upper_evidence) =
+      InsideClosedDifference
+        (negate_difference upper)
+        (negate_difference member)
+        (negate_difference lower)
+        (difference_negate_reverses_order
+          lower
+          upper
+          validity)
+        (difference_negate_reverses_order
+          member
+          upper
+          upper_evidence)
+        (difference_negate_reverses_order
+          lower
+          member
+          lower_evidence)
+
+-- Subtraction is addition with the negated right member and interval. The
+-- resulting endpoint interval is [left_lower-right_upper,
+-- left_upper-right_lower].
+public export
+subtraction_encloses_closed_members :
+  (left_interval, right_interval : ClosedDifferenceInterval) →
+  (left_member, right_member : SignedDifference) →
+  ClosedDifferenceMember left_member left_interval →
+  ClosedDifferenceMember right_member right_interval →
+  ClosedDifferenceMember
+    (subtract_difference left_member right_member)
+    (subtract_closed_difference_intervals left_interval right_interval)
+subtraction_encloses_closed_members
+  left_interval
+  right_interval
+  left_member
+  right_member
+  left_membership
+  right_membership =
+    addition_encloses_closed_members
+      left_interval
+      (negate_closed_difference_interval right_interval)
+      left_member
+      (negate_difference right_member)
+      left_membership
+      (negation_encloses_closed_member
+        right_interval
+        right_member
+        right_membership)
