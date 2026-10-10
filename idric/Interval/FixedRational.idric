@@ -17,6 +17,13 @@ data FixedRational : PositiveDenominator → Type where
     FixedRational denominator
 
 public export
+fixed_rational :
+  (denominator : PositiveDenominator) →
+  SignedDifference →
+  FixedRational denominator
+fixed_rational denominator numerator = RationalNumerator numerator
+
+public export
 fixed_numerator :
   {denominator : PositiveDenominator} →
   FixedRational denominator →
@@ -53,27 +60,27 @@ fixed_order_reflexive :
 fixed_order_reflexive (RationalNumerator numerator) =
   difference_order_reflexive numerator
 
--- General evidence is supplied from signed-numerator order, preserving the
--- exact noncanonical operands.
+-- The denominator is explicit because the evidence type contains only the
+-- signed numerators and cannot reconstruct which indexed scale produced them.
 public export
 fixed_order_from_difference :
-  {denominator : PositiveDenominator} →
+  (denominator : PositiveDenominator) →
   (left, right : SignedDifference) →
   DifferenceOrder left right →
   fixed_rational_order
-    (RationalNumerator left)
-    (RationalNumerator right)
-fixed_order_from_difference left right evidence = evidence
+    (fixed_rational denominator left)
+    (fixed_rational denominator right)
+fixed_order_from_difference denominator left right evidence = evidence
 
 public export
 fixed_order_to_difference :
-  {denominator : PositiveDenominator} →
+  (denominator : PositiveDenominator) →
   (left, right : SignedDifference) →
   fixed_rational_order
-    (RationalNumerator left)
-    (RationalNumerator right) →
+    (fixed_rational denominator left)
+    (fixed_rational denominator right) →
   DifferenceOrder left right
-fixed_order_to_difference left right evidence = evidence
+fixed_order_to_difference denominator left right evidence = evidence
 
 public export
 add_fixed_rational :
