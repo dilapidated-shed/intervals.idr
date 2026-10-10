@@ -2,6 +2,8 @@ name: Idriç source-style drift check
 
 on:
   push:
+    branches:
+      - main
     paths:
       - 'idric/**'
       - '.github/workflows/idric-style.yml'
