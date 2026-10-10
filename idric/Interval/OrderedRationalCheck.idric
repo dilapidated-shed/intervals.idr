@@ -1,0 +1,110 @@
+module Interval.OrderedRationalCheck
+
+import Data.So
+import Interval.NaturalProofs
+import Interval.OrderedRational
+import Interval.SignedDifference
+
+%unbound_implicits off
+
+public export
+rational_decision_is_yes : {statement : Type} → Dec statement → Bool
+rational_decision_is_yes (Yes _) = True
+rational_decision_is_yes (No _) = False
+
+one_half : OrderedRational
+one_half = fraction_ordered (positive_difference 1) (OneMore 1)
+
+two_fourths : OrderedRational
+two_fourths = fraction_ordered (positive_difference 2) (OneMore 3)
+
+one_third : OrderedRational
+one_third = fraction_ordered (positive_difference 1) (OneMore 2)
+
+two_thirds : OrderedRational
+two_thirds = fraction_ordered (positive_difference 2) (OneMore 2)
+
+five_sixths : OrderedRational
+five_sixths = fraction_ordered (positive_difference 5) (OneMore 5)
+
+negative_three_halves : OrderedRational
+negative_three_halves = fraction_ordered (negative_difference 3) (OneMore 1)
+
+negative_one_half : OrderedRational
+negative_one_half = fraction_ordered (negative_difference 1) (OneMore 1)
+
+negative_three_fourths : OrderedRational
+negative_three_fourths = fraction_ordered (negative_difference 3) (OneMore 3)
+
+positive_denominator_product :
+  positive_value (multiply_positive (OneMore 1) (OneMore 2)) = 6
+positive_denominator_product = Refl
+
+one_half_before_two_thirds :
+  RationalOrder one_half two_thirds
+one_half_before_two_thirds =
+  rational_order_evidence one_half two_thirds Oh
+
+one_half_before_two_thirds_boolean :
+  ordered_rational_order one_half two_thirds = True
+one_half_before_two_thirds_boolean =
+  truth_to_equality
+    (rational_order_boolean
+      one_half
+      two_thirds
+      one_half_before_two_thirds)
+
+negative_order_example :
+  RationalOrder negative_three_halves negative_one_half
+negative_order_example =
+  rational_order_evidence
+    negative_three_halves
+    negative_one_half
+    Oh
+
+half_and_two_fourths_are_equivalent :
+  RationalEquivalent one_half two_fourths
+half_and_two_fourths_are_equivalent = Refl
+
+fraction_antisymmetry :
+  RationalEquivalent one_half two_fourths
+fraction_antisymmetry =
+  rational_order_antisymmetric
+    one_half
+    two_fourths
+    (rational_order_evidence one_half two_fourths Oh)
+    (rational_order_evidence two_fourths one_half Oh)
+
+fraction_equivalence_is_symmetric :
+  RationalEquivalent two_fourths one_half
+fraction_equivalence_is_symmetric =
+  rational_equivalent_symmetric
+    one_half
+    two_fourths
+    half_and_two_fourths_are_equivalent
+
+half_plus_third :
+  RationalEquivalent
+    (add_ordered one_half one_third)
+    five_sixths
+half_plus_third = Refl
+
+two_thirds_times_negative_three_fourths :
+  RationalEquivalent
+    (multiply_ordered two_thirds negative_three_fourths)
+    negative_one_half
+two_thirds_times_negative_three_fourths = Refl
+
+rational_reflexive_open :
+  (value : OrderedRational) → RationalOrder value value
+rational_reflexive_open = rational_order_reflexive
+
+decidable_rational_order_accepts_true_case :
+  rational_decision_is_yes
+    (decide_rational_order one_half two_thirds) = True
+decidable_rational_order_accepts_true_case = Refl
+
+decidable_rational_order_rejects_reverse_case :
+  rational_decision_is_yes
+    (decide_rational_order two_thirds one_half) = False
+decidable_rational_order_rejects_reverse_case = Refl
