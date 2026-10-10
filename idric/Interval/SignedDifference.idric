@@ -3,6 +3,7 @@ module Interval.SignedDifference
 import Data.Nat
 import Data.Nat.Order.Properties
 import Data.So
+import Syntax.PreorderReasoning
 
 %unbound_implicits off
 
@@ -183,19 +184,25 @@ difference_add_lte
   {second_right = Difference second_right_positive second_right_negative}
   first_order
   second_order =
-    rewrite sym
-      (plus_shuffle
-        first_left_positive
-        second_left_positive
-        first_right_negative
-        second_right_negative) in
-    rewrite sym
-      (plus_shuffle
-        first_right_positive
-        second_right_positive
-        first_left_negative
-        second_left_negative) in
-    plusLteMonotone first_order second_order
+    the
+      (LTE
+        ((first_left_positive + second_left_positive) +
+         (first_right_negative + second_right_negative))
+        ((first_right_positive + second_right_positive) +
+         (first_left_negative + second_left_negative)))
+      (rewrite sym
+        (plus_shuffle
+          first_left_positive
+          second_left_positive
+          first_right_negative
+          second_right_negative) in
+       rewrite sym
+        (plus_shuffle
+          first_right_positive
+          second_right_positive
+          first_left_negative
+          second_left_negative) in
+       plusLteMonotone first_order second_order)
 
 -- Negation reverses the signed order.
 public export
@@ -207,9 +214,13 @@ difference_negate_reverses_lte
   {left = Difference left_positive left_negative}
   {right = Difference right_positive right_negative}
   ordered =
-    rewrite plusCommutative left_positive right_negative in
-    rewrite plusCommutative right_positive left_negative in
-    ordered
+    the
+      (LTE
+        (right_negative + left_positive)
+        (left_negative + right_positive))
+      (rewrite plusCommutative left_positive right_negative in
+       rewrite plusCommutative right_positive left_negative in
+       ordered)
 
 -- Multiplication by a natural factor is monotone, including the zero factor.
 public export
@@ -225,15 +236,19 @@ difference_scale_lte
   {left = Difference left_positive left_negative}
   {right = Difference right_positive right_negative}
   ordered =
-    rewrite multDistributesOverPlusRight
-      factor left_positive right_negative in
-    rewrite multDistributesOverPlusRight
-      factor right_positive left_negative in
-    multLteMonotoneRight
-      factor
-      (left_positive + right_negative)
-      (right_positive + left_negative)
-      ordered
+    the
+      (LTE
+        (factor × left_positive + factor × right_negative)
+        (factor × right_positive + factor × left_negative))
+      (rewrite multDistributesOverPlusRight
+        factor left_positive right_negative in
+       rewrite multDistributesOverPlusRight
+        factor right_positive left_negative in
+       multLteMonotoneRight
+        factor
+        (left_positive + right_negative)
+        (right_positive + left_negative)
+        ordered)
 
 -- Addition respects semantic equality even though the pair representation is
 -- intentionally noncanonical.
@@ -253,16 +268,21 @@ difference_add_respects_equivalent
   {second_right = Difference second_right_positive second_right_negative}
   first_equal
   second_equal =
-    rewrite sym
-      (plus_shuffle
-        first_left_positive
-        second_left_positive
-        first_right_negative
-        second_right_negative) in
-    rewrite sym
-      (plus_shuffle
-        first_right_positive
-        second_right_positive
-        first_left_negative
-        second_left_negative) in
-    cong2 (+) first_equal second_equal
+    the
+      (((first_left_positive + second_left_positive) +
+        (first_right_negative + second_right_negative)) =
+       ((first_right_positive + second_right_positive) +
+        (first_left_negative + second_left_negative)))
+      (rewrite sym
+        (plus_shuffle
+          first_left_positive
+          second_left_positive
+          first_right_negative
+          second_right_negative) in
+       rewrite sym
+        (plus_shuffle
+          first_right_positive
+          second_right_positive
+          first_left_negative
+          second_left_negative) in
+       cong2 (+) first_equal second_equal)
