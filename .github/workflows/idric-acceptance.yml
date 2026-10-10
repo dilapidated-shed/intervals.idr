@@ -7,11 +7,13 @@ on:
     paths:
       - 'idric/**'
       - 'intervals-idric.ipkg'
+      - 'intervals-idric-core.ipkg'
       - '.github/workflows/idric-acceptance.yml'
   pull_request:
     paths:
       - 'idric/**'
       - 'intervals-idric.ipkg'
+      - 'intervals-idric-core.ipkg'
       - '.github/workflows/idric-acceptance.yml'
 
 concurrency:
@@ -68,7 +70,20 @@ jobs:
             .toolchain/idric/_/support/c
           key: idric-${{ runner.os }}-94dfd99bd3e376507fedc8611053b7173b2519f0-v2
 
-      - name: Compile Idriç interval types and concrete proofs
+      - name: Compile the core package without interval-by-interval products
+        shell: bash
+        run: |
+          idric_hidden="$GITHUB_WORKSPACE/.toolchain/idric/_"
+          export PATH="$idric_hidden/.tools/bin:$PATH"
+          export IDRIS2_PATH="$idric_hidden/libs/prelude/build/ttc:$idric_hidden/libs/base/build/ttc:$idric_hidden/libs/linear/build/ttc:$idric_hidden/libs/network/build/ttc:$idric_hidden/libs/contrib/build/ttc:$idric_hidden/libs/test/build/ttc"
+          export IDRIS2_DATA="$idric_hidden/support"
+          export IDRIS2_LIBS="$idric_hidden/support/c"
+          "$idric_hidden/build/exec/idris2" --build intervals-idric-core.ipkg
+
+      - name: Run the core checked fixture
+        run: ./build/exec/interval-idric-core-tests
+
+      - name: Compile the aggregate package including optional derived operations
         shell: bash
         run: |
           idric_hidden="$GITHUB_WORKSPACE/.toolchain/idric/_"
@@ -78,5 +93,5 @@ jobs:
           export IDRIS2_LIBS="$idric_hidden/support/c"
           "$idric_hidden/build/exec/idris2" --build intervals-idric.ipkg
 
-      - name: Run the Idriç checked fixture
+      - name: Run the aggregate checked fixture
         run: ./build/exec/interval-idric-tests
