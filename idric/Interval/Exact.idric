@@ -41,7 +41,7 @@ add_rational (Ratio a b) (Ratio c d) =
 
 public export
 negate_rational : ExactRational → ExactRational
-negate_rational (Ratio a b) = Ratio (0 − a) b
+negate_rational (Ratio a b) = Ratio (-a) b
 
 public export
 subtract_rational : ExactRational → ExactRational → ExactRational
