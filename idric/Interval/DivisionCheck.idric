@@ -14,6 +14,9 @@ one_half = over 1 (OnePlus 1)
 negative_one : ExactRational
 negative_one = whole (-1)
 
+negative_two : ExactRational
+negative_two = whole (-2)
+
 positive_away_from_zero :
   same_division_result
     (divide_intervals
@@ -119,13 +122,61 @@ empty_numerator_has_no_quotients :
     division_empty = True
 empty_numerator_has_no_quotients = Refl
 
-unbounded_divisor_is_deferred :
+-- Unbounded divisors now have exact reciprocal components.
+positive_over_whole_line :
   same_division_result
     (divide_intervals
       (closed_interval (whole 1) (whole 2))
       Interval.Exact.all_numbers)
-    division_deferred = True
-unbounded_divisor_is_deferred = Refl
+    (division_split
+      (below (whole 0) excluded)
+      (above (whole 0) excluded)) = True
+positive_over_whole_line = Refl
+
+nonnegative_over_whole_line :
+  same_division_result
+    (divide_intervals
+      (closed_interval (whole 0) (whole 1))
+      Interval.Exact.all_numbers)
+    (division_connected Interval.Exact.all_numbers) = True
+nonnegative_over_whole_line = Refl
+
+zero_over_whole_line :
+  same_division_result
+    (divide_intervals
+      (closed_interval (whole 0) (whole 0))
+      Interval.Exact.all_numbers)
+    (division_connected
+      (closed_interval (whole 0) (whole 0))) = True
+zero_over_whole_line = Refl
+
+positive_over_positive_unbounded_divisor :
+  same_division_result
+    (divide_intervals
+      (closed_interval (whole 2) (whole 4))
+      (above (whole 2) included))
+    (division_connected
+      (left_open_interval (whole 0) (whole 2))) = True
+positive_over_positive_unbounded_divisor = Refl
+
+positive_over_negative_unbounded_divisor :
+  same_division_result
+    (divide_intervals
+      (closed_interval (whole 2) (whole 4))
+      (below (whole (-2)) included))
+    (division_connected
+      (right_open_interval negative_two (whole 0))) = True
+positive_over_negative_unbounded_divisor = Refl
+
+positive_over_left_unbounded_crossing_zero :
+  same_division_result
+    (divide_intervals
+      (closed_interval (whole 1) (whole 2))
+      (below (whole 2) included))
+    (division_split
+      (below (whole 0) excluded)
+      (above one_half included)) = True
+positive_over_left_unbounded_crossing_zero = Refl
 
 -- Normalization distinguishes adjacency from an actual missing point.
 touching_half_open_components_merge :

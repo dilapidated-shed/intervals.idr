@@ -99,6 +99,63 @@ reciprocal_two_rays lower lower_kind upper upper_kind =
       (lower_at (reciprocal_assuming_nonzero upper) upper_kind)
       unbounded_above)
 
+-- (-∞, upper] or (-∞, upper). The reciprocal limit at -∞ is zero from
+-- below and is never attained.
+public export
+reciprocal_left_unbounded :
+  ExactRational →
+  endpoint_membership →
+  reciprocal_result
+reciprocal_left_unbounded upper upper_kind =
+  let zero = whole 0
+  in if rational_less upper zero
+       then reciprocal_connected
+              (make_interval
+                (lower_at
+                  (reciprocal_assuming_nonzero upper)
+                  upper_kind)
+                (upper_at zero excluded))
+       else if rational_equal upper zero
+         then reciprocal_connected (below zero excluded)
+         else reciprocal_split
+                (below zero excluded)
+                (above
+                  (reciprocal_assuming_nonzero upper)
+                  upper_kind)
+
+-- [lower, +∞) or (lower, +∞). The reciprocal limit at +∞ is zero from
+-- above and is never attained.
+public export
+reciprocal_right_unbounded :
+  ExactRational →
+  endpoint_membership →
+  reciprocal_result
+reciprocal_right_unbounded lower lower_kind =
+  let zero = whole 0
+  in if rational_less zero lower
+       then reciprocal_connected
+              (make_interval
+                (lower_at zero excluded)
+                (upper_at
+                  (reciprocal_assuming_nonzero lower)
+                  lower_kind))
+       else if rational_equal lower zero
+         then reciprocal_connected (above zero excluded)
+         else reciprocal_split
+                (below
+                  (reciprocal_assuming_nonzero lower)
+                  lower_kind)
+                (above zero excluded)
+
+-- The reciprocal of every nonzero real is every nonzero real. Zero is a
+-- missing point, so the exact result has two open rays rather than one interval.
+public export
+reciprocal_whole_line : reciprocal_result
+reciprocal_whole_line =
+  reciprocal_split
+    (below (whole 0) excluded)
+    (above (whole 0) excluded)
+
 public export
 reciprocal_interval : exact_interval → reciprocal_result
 reciprocal_interval no_points = reciprocal_empty
@@ -124,7 +181,18 @@ reciprocal_interval
                       lower_kind
                       upper
                       upper_kind
-reciprocal_interval _ = reciprocal_unbounded_deferred
+reciprocal_interval
+  (points_between
+    (Span unbounded_below unbounded_above _)) =
+      reciprocal_whole_line
+reciprocal_interval
+  (points_between
+    (Span unbounded_below (upper_at upper upper_kind) _)) =
+      reciprocal_left_unbounded upper upper_kind
+reciprocal_interval
+  (points_between
+    (Span (lower_at lower lower_kind) unbounded_above _)) =
+      reciprocal_right_unbounded lower lower_kind
 
 public export
 same_reciprocal_result : reciprocal_result → reciprocal_result → Bool

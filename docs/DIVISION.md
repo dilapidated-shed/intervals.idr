@@ -21,7 +21,7 @@ choice division_result one_of
 - `division_empty` means no quotient values exist, as with an empty divisor or `[0,0]`.
 - `division_connected` carries one exact interval.
 - `division_split` carries two ordered components separated by a genuine gap.
-- `division_deferred` preserves an explicitly unsupported prerequisite, currently reciprocals of already-unbounded divisors or the product module's fail-closed guard.
+- `division_deferred` preserves a fail-closed arithmetic prerequisite. With exact unbounded reciprocals and sign-sensitive unbounded multiplication implemented, current validated interval inputs do not intentionally use this branch.
 
 ## Normalization
 
@@ -43,15 +43,20 @@ For example:
 ## Examples
 
 ```text
-[2,4] / [1,2]      = [1,4]
-(2,4] / [1,2]      = (1,4]
-[2,4] / [-2,-1]    = [-4,-1]
-[2,4] / [0,2]      = [1,+∞)
-[2,4] / [-2,0]     = (-∞,-1]
-[1,2] / [-1,1]     = (-∞,-1] ∪ [1,+∞)
-[0,1] / [-1,1]     = (-∞,+∞)
-[0,0] / [-1,1]     = [0,0]
-[1,2] / [0,0]      = empty
+[2,4] / [1,2]        = [1,4]
+(2,4] / [1,2]        = (1,4]
+[2,4] / [-2,-1]      = [-4,-1]
+[2,4] / [0,2]        = [1,+∞)
+[2,4] / [-2,0]       = (-∞,-1]
+[1,2] / [-1,1]       = (-∞,-1] ∪ [1,+∞)
+[0,1] / [-1,1]       = (-∞,+∞)
+[0,0] / [-1,1]       = [0,0]
+[1,2] / [0,0]        = empty
+[1,2] / (-∞,+∞)      = (-∞,0) ∪ (0,+∞)
+[0,1] / (-∞,+∞)      = (-∞,+∞)
+[2,4] / [2,+∞)       = (0,2]
+[2,4] / (-∞,-2]      = [-2,0)
+[1,2] / (-∞,2]       = (-∞,0) ∪ [1/2,+∞)
 ```
 
 ## Proof boundary

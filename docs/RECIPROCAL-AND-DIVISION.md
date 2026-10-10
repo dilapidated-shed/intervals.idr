@@ -1,4 +1,4 @@
-# Reciprocal shape and future division
+# Reciprocal shape and exact division
 
 The reciprocal of a connected interval is not always connected.
 
@@ -27,9 +27,26 @@ An interval crossing zero becomes two disjoint rays:
 
 The closed zero singleton has no reciprocal values, and the empty interval remains empty.
 
+## Unbounded input intervals
+
+Unbounded inputs now have exact reciprocal components as well:
+
+```text
+(-∞,-2]    ↦ [-1/2,0)
+(-∞,0]     ↦ (-∞,0)
+(-∞,2]     ↦ (-∞,0) ∪ [1/2,+∞)
+[2,+∞)     ↦ (0,1/2]
+[0,+∞)     ↦ (0,+∞)
+[-2,+∞)    ↦ (-∞,-1/2] ∪ (0,+∞)
+(-∞,+∞)    ↦ (-∞,0) ∪ (0,+∞)
+```
+
+The limit value zero is excluded whenever it arises only from `|x| → ∞`.
+Endpoint membership at a finite nonzero bound is reversed to the corresponding reciprocal boundary without otherwise changing inclusion.
+
 ## Idriç result type
 
-`Interval.Reciprocal` therefore returns:
+`Interval.Reciprocal` returns:
 
 ```idric
 choice reciprocal_result one_of
@@ -39,7 +56,7 @@ choice reciprocal_result one_of
   reciprocal_unbounded_deferred
 ```
 
-This type records the first unavoidable reason ordinary interval division cannot always return one `exact_interval`.
+All valid empty, finite, one-sided-unbounded and two-sided-unbounded intervals are now classified exactly. `reciprocal_unbounded_deferred` remains only as a fail-closed compatibility branch; `reciprocal_interval` no longer returns it for the current validated interval representation.
 
 ## Exact rational representation
 
@@ -52,10 +69,17 @@ For a nonzero exact rational `n/d`, reciprocal is represented as:
 
 The denominator remains positive by construction. `reciprocal_rational 0` returns `Nothing`.
 
-## Deliberate boundary
+## Division
 
-This slice handles finite input intervals. Reciprocals of already-unbounded intervals remain explicit as `reciprocal_unbounded_deferred`; their zero/sign cases should be added before full division.
+`A ÷ B` multiplies `A` by every connected component of `reciprocal_interval B`, then normalizes overlapping or touching products. This supports unbounded divisors as well as finite divisors crossing zero.
 
-Future `A ÷ B` should multiply `A` by each connected component of `reciprocal_interval B`, then normalize overlapping or touching products. That likely requires a small canonical finite-union type rather than reusing a pair of intervals blindly.
+Representative consequences include:
 
-The current checked reductions are not yet a general proof that the returned components equal `{1/x | x ∈ I, x ≠ 0}`. That theorem belongs in the arithmetic proof layer and should use `IntervalMember` rather than a second unrelated membership definition.
+```text
+[1,2] / (-∞,+∞) = (-∞,0) ∪ (0,+∞)
+[0,1] / (-∞,+∞) = (-∞,+∞)
+[2,4] / [2,+∞)  = (0,2]
+[2,4] / (-∞,-2] = [-2,0)
+```
+
+The checked reductions are not yet a general proof that the returned components equal `{1/x | x ∈ I, x ≠ 0}` or that normalized quotient components equal the set-theoretic quotient. Those theorems belong in the arithmetic proof layer and should use `IntervalMember` rather than a second unrelated membership definition.
