@@ -10,6 +10,10 @@ on:
       - 'idric/**'
       - '.github/workflows/idric-style.yml'
 
+concurrency:
+  group: idric-style-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
