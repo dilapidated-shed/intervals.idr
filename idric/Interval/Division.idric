@@ -1,0 +1,147 @@
+module Interval.Division
+
+import Interval.Exact
+import Interval.Product
+import Interval.Reciprocal
+import Interval.Relation
+
+%unbound_implicits off
+
+-- A quotient can be empty, connected, or a normalized union of two ordered
+-- components. Deferred means a prerequisite arithmetic case remains explicit.
+public export
+choice division_result one_of
+  division_empty
+  division_connected exact_interval
+  division_split exact_interval exact_interval
+  division_deferred
+
+public export
+weaker_lower : lower_bound → lower_bound → lower_bound
+weaker_lower unbounded_below _ = unbounded_below
+weaker_lower _ unbounded_below = unbounded_below
+weaker_lower
+  (lower_at left_value left_kind)
+  (lower_at right_value right_kind) =
+    if rational_less left_value right_value
+      then lower_at left_value left_kind
+      else if rational_less right_value left_value
+        then lower_at right_value right_kind
+        else lower_at left_value (either_included left_kind right_kind)
+
+public export
+weaker_upper : upper_bound → upper_bound → upper_bound
+weaker_upper unbounded_above _ = unbounded_above
+weaker_upper _ unbounded_above = unbounded_above
+weaker_upper
+  (upper_at left_value left_kind)
+  (upper_at right_value right_kind) =
+    if rational_less left_value right_value
+      then upper_at right_value right_kind
+      else if rational_less right_value left_value
+        then upper_at left_value left_kind
+        else upper_at left_value (either_included left_kind right_kind)
+
+public export
+hull_intervals : exact_interval → exact_interval → exact_interval
+hull_intervals no_points right = right
+hull_intervals left no_points = left
+hull_intervals
+  (points_between (Span left_lower left_upper _))
+  (points_between (Span right_lower right_upper _)) =
+    make_interval
+      (weaker_lower left_lower right_lower)
+      (weaker_upper left_upper right_upper)
+
+-- Assumes the left interval is numerically no later than the right interval.
+-- Equal boundary values form one connected union when either side includes the
+-- shared point. A genuine gap remains only when both sides exclude it.
+public export
+joinable_in_order : exact_interval → exact_interval → Bool
+joinable_in_order no_points _ = True
+joinable_in_order _ no_points = True
+joinable_in_order
+  (points_between (Span _ unbounded_above _))
+  _ = True
+joinable_in_order
+  _
+  (points_between (Span unbounded_below _ _)) = True
+joinable_in_order
+  (points_between (Span _ (upper_at left_limit left_kind) _))
+  (points_between (Span (lower_at right_limit right_kind) _ _)) =
+    if rational_less left_limit right_limit
+      then False
+      else if rational_equal left_limit right_limit
+        then is_included left_kind || is_included right_kind
+        else True
+
+public export
+normalize_interval_pair :
+  exact_interval →
+  exact_interval →
+  division_result
+normalize_interval_pair no_points no_points = division_empty
+normalize_interval_pair no_points right = division_connected right
+normalize_interval_pair left no_points = division_connected left
+normalize_interval_pair left right =
+  case compare_intervals left right of
+    both_have_no_points => division_empty
+    left_has_no_points => division_connected right
+    right_has_no_points => division_connected left
+    ranges_overlap => division_connected (hull_intervals left right)
+    left_strictly_before_right =>
+      if joinable_in_order left right
+        then division_connected (hull_intervals left right)
+        else division_split left right
+    right_strictly_before_left =>
+      if joinable_in_order right left
+        then division_connected (hull_intervals right left)
+        else division_split right left
+
+public export
+product_as_division : interval_product_result → division_result
+product_as_division unbounded_product_deferred = division_deferred
+product_as_division (computed_product no_points) = division_empty
+product_as_division (computed_product interval) = division_connected interval
+
+public export
+normalize_product_pair :
+  interval_product_result →
+  interval_product_result →
+  division_result
+normalize_product_pair unbounded_product_deferred _ = division_deferred
+normalize_product_pair _ unbounded_product_deferred = division_deferred
+normalize_product_pair
+  (computed_product left)
+  (computed_product right) =
+    normalize_interval_pair left right
+
+-- Set-valued division excludes zero divisors. A zero-crossing divisor therefore
+-- contributes one product for each reciprocal ray, followed by normalization.
+public export
+divide_intervals : exact_interval → exact_interval → division_result
+divide_intervals numerator denominator =
+  case reciprocal_interval denominator of
+    reciprocal_empty => division_empty
+    reciprocal_unbounded_deferred => division_deferred
+    reciprocal_connected reciprocal_component =>
+      product_as_division
+        (multiply_intervals numerator reciprocal_component)
+    reciprocal_split negative_component positive_component =>
+      normalize_product_pair
+        (multiply_intervals numerator negative_component)
+        (multiply_intervals numerator positive_component)
+
+public export
+same_division_result : division_result → division_result → Bool
+same_division_result division_empty division_empty = True
+same_division_result
+  (division_connected left)
+  (division_connected right) = interval_equal left right
+same_division_result
+  (division_split left_first left_second)
+  (division_split right_first right_second) =
+    interval_equal left_first right_first &&
+    interval_equal left_second right_second
+same_division_result division_deferred division_deferred = True
+same_division_result _ _ = False
