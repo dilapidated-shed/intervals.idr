@@ -1,6 +1,6 @@
 package intervals-idric
 version = 0.1.0
 sourcedir = "idric"
-modules = Interval.NaturalProofs, Interval.SignedDifference, Interval.SignedDifferenceCheck, Interval.OrderedRational, Interval.OrderedRationalCheck, Interval.Exact, Interval.Relation, Interval.Product, Interval.ProductCheck, Interval.Reciprocal, Interval.ReciprocalCheck, Interval.Division, Interval.DivisionCheck, Interval.Membership, Interval.MembershipCheck, Interval.Check
+modules = Interval.NaturalProofs, Interval.SignedDifference, Interval.SignedDifferenceCheck, Interval.ClosedDifference, Interval.ClosedDifferenceCheck, Interval.OrderedRational, Interval.OrderedRationalCheck, Interval.Exact, Interval.Relation, Interval.Product, Interval.ProductCheck, Interval.Reciprocal, Interval.ReciprocalCheck, Interval.Division, Interval.DivisionCheck, Interval.Membership, Interval.MembershipCheck, Interval.Check
 main = Interval.Check
 executable = "interval-idric-tests"
