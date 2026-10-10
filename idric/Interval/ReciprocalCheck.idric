@@ -116,11 +116,72 @@ empty_has_empty_reciprocal :
     reciprocal_empty = True
 empty_has_empty_reciprocal = Refl
 
-unbounded_reciprocal_is_deferred :
+-- Unbounded reciprocals are exact rather than deferred.
+whole_line_reciprocal :
   same_reciprocal_result
     (reciprocal_interval Interval.Exact.all_numbers)
-    reciprocal_unbounded_deferred = True
-unbounded_reciprocal_is_deferred = Refl
+    (reciprocal_split
+      (below (whole 0) excluded)
+      (above (whole 0) excluded)) = True
+whole_line_reciprocal = Refl
+
+closed_negative_left_ray_reciprocal :
+  same_reciprocal_result
+    (reciprocal_interval
+      (below (whole (-2)) included))
+    (reciprocal_connected
+      (right_open_interval negative_one_half (whole 0))) = True
+closed_negative_left_ray_reciprocal = Refl
+
+open_negative_left_ray_reciprocal :
+  same_reciprocal_result
+    (reciprocal_interval
+      (below (whole (-2)) excluded))
+    (reciprocal_connected
+      (open_interval negative_one_half (whole 0))) = True
+open_negative_left_ray_reciprocal = Refl
+
+nonpositive_left_ray_reciprocal :
+  same_reciprocal_result
+    (reciprocal_interval
+      (below (whole 0) included))
+    (reciprocal_connected
+      (below (whole 0) excluded)) = True
+nonpositive_left_ray_reciprocal = Refl
+
+left_unbounded_crossing_zero_reciprocal :
+  same_reciprocal_result
+    (reciprocal_interval
+      (below (whole 2) included))
+    (reciprocal_split
+      (below (whole 0) excluded)
+      (above one_half included)) = True
+left_unbounded_crossing_zero_reciprocal = Refl
+
+closed_positive_right_ray_reciprocal :
+  same_reciprocal_result
+    (reciprocal_interval
+      (above (whole 2) included))
+    (reciprocal_connected
+      (left_open_interval (whole 0) one_half)) = True
+closed_positive_right_ray_reciprocal = Refl
+
+positive_right_ray_from_zero_reciprocal :
+  same_reciprocal_result
+    (reciprocal_interval
+      (above (whole 0) included))
+    (reciprocal_connected
+      (above (whole 0) excluded)) = True
+positive_right_ray_from_zero_reciprocal = Refl
+
+right_unbounded_crossing_zero_reciprocal :
+  same_reciprocal_result
+    (reciprocal_interval
+      (above (whole (-2)) included))
+    (reciprocal_split
+      (below negative_one_half included)
+      (above (whole 0) excluded)) = True
+right_unbounded_crossing_zero_reciprocal = Refl
 
 positive_rational_reciprocal :
   reciprocal_rational (over 2 (OnePlus 2)) =
