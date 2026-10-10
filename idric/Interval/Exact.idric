@@ -63,7 +63,7 @@ public export
 rational_less_or_equal : ExactRational → ExactRational → Bool
 rational_less_or_equal x y = rational_less x y || rational_equal x y
 
--- This reducible decision is local because a proof produced by `make_interval`
+-- This reducible decision is local because evidence produced by `make_interval`
 -- must remain available to clients reducing public interval definitions.
 public export
 decide_truth : (condition : Bool) → Either (So condition) (So (not condition))
@@ -97,7 +97,7 @@ choice upper_bound one_of
   unbounded_above
 
 -- Evidence that two bounds describe a nonempty interval. The first checked
--- version keeps proofs as ordinary fields; proof erasure is a later compiler
+-- version keeps witnesses as ordinary fields; erasure is a later compiler
 -- representation question and is not required for the mathematical invariant.
 public export
 data ValidBounds : lower_bound → upper_bound → Type where
@@ -113,11 +113,11 @@ data ValidBounds : lower_bound → upper_bound → Type where
   StrictFinite :
     {lower, upper : ExactRational} →
     {lower_kind, upper_kind : endpoint_membership} →
-    (proof : So (rational_less lower upper)) →
+    (witness : So (rational_less lower upper)) →
     ValidBounds (lower_at lower lower_kind) (upper_at upper upper_kind)
   EqualClosed :
     {lower, upper : ExactRational} →
-    (proof : So (rational_equal lower upper)) →
+    (witness : So (rational_equal lower upper)) →
     ValidBounds (lower_at lower included) (upper_at upper included)
 
 public export
@@ -149,12 +149,12 @@ make_interval
   (lower_at lower lower_kind)
   (upper_at upper upper_kind) =
     case decide_truth (rational_less lower upper) of
-      Left proof =>
+      Left witness =>
         points_between
           (Span
             (lower_at lower lower_kind)
             (upper_at upper upper_kind)
-            (StrictFinite proof))
+            (StrictFinite witness))
       Right _ =>
         case lower_kind of
           excluded => no_points
@@ -163,12 +163,12 @@ make_interval
               excluded => no_points
               included =>
                 case decide_truth (rational_equal lower upper) of
-                  Left proof =>
+                  Left witness =>
                     points_between
                       (Span
                         (lower_at lower included)
                         (upper_at upper included)
-                        (EqualClosed proof))
+                        (EqualClosed witness))
                   Right _ => no_points
 
 public export
