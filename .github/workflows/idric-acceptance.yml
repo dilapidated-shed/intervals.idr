@@ -29,7 +29,20 @@ jobs:
           ref: 94dfd99bd3e376507fedc8611053b7173b2519f0
           path: .toolchain/idric
 
+      - name: Restore the pinned Idriç build
+        id: idric-cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: |
+            .toolchain/idric/_/.tools
+            .toolchain/idric/_/bootstrap-build
+            .toolchain/idric/_/build
+            .toolchain/idric/_/libs/*/build
+            .toolchain/idric/_/support/c
+          key: idric-${{ runner.os }}-94dfd99bd3e376507fedc8611053b7173b2519f0-v1
+
       - name: Bootstrap that Idriç compiler
+        if: steps.idric-cache.outputs.cache-hit != 'true'
         run: sh .toolchain/idric/edric bootstrap
 
       - name: Compile Idriç interval types and concrete proofs
