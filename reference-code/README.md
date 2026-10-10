@@ -1,7 +1,7 @@
 # Formal interval reference code
 
 These are **complete, unchanged source files** from upstream formalizations, pinned to immutable revisions.
-They are for reading and comparisons, **not** dependencies of our Idris 2 build. Vendored source does not independently compile here and is not an assertion that our own interval arithmetic has been proved correct.
+They are for reading and comparisons, **not** dependencies of the Idriç implementation. Vendored source does not independently compile here and is not an assertion that our own interval arithmetic has been proved correct.
 
 ## Where the code is
 
