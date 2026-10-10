@@ -1,5 +1,7 @@
 module Interval.Exact
 
+import Data.So
+
 %unbound_implicits off
 
 -- Signed whole numbers keep an Idriç-facing mathematical name. Integer is
@@ -61,7 +63,7 @@ public export
 rational_less_or_equal : ExactRational → ExactRational → Bool
 rational_less_or_equal x y = rational_less x y || rational_equal x y
 
--- Endpoint inclusion is data, not a nilpotent epsilon.
+-- Endpoint inclusion is set membership data, not a nilpotent epsilon.
 public export
 choice endpoint_membership one_of
   included
@@ -87,40 +89,116 @@ choice upper_bound one_of
   upper_at ExactRational endpoint_membership
   unbounded_above
 
--- Construct ordinary intervals via `make_interval` or the convenience functions.
--- Raw choice alternatives remain visible in this first Idriç slice. A caller
--- can bypass validation by constructing `points_between` directly; a later
--- proof-indexed interface must close that gap.
+-- Evidence that a nonempty span's lower and upper bounds are compatible.
+-- A caller may construct a span directly only by supplying one of these proofs.
+public export
+data ValidSpan : lower_bound → upper_bound → Type where
+  UnboundedBelow :
+    {upper_boundary : upper_bound} →
+    ValidSpan unbounded_below upper_boundary
+
+  UnboundedAbove :
+    {lower_boundary : lower_bound} →
+    ValidSpan lower_boundary unbounded_above
+
+  StrictlyOrdered :
+    {lower_value, upper_value : ExactRational} →
+    {lower_kind, upper_kind : endpoint_membership} →
+    So (rational_less lower_value upper_value) →
+    ValidSpan
+      (lower_at lower_value lower_kind)
+      (upper_at upper_value upper_kind)
+
+  ClosedSingleton :
+    {lower_value, upper_value : ExactRational} →
+    So (rational_equal lower_value upper_value) →
+    ValidSpan
+      (lower_at lower_value included)
+      (upper_at upper_value included)
+
+public export
+record ValidatedSpan where
+  constructor MkValidatedSpan
+  lower_boundary : lower_bound
+  upper_boundary : upper_bound
+  validity : ValidSpan lower_boundary upper_boundary
+
+-- `points_between` no longer accepts an arbitrary pair of bounds. Its payload
+-- carries evidence that the span is nonempty and correctly ordered.
 public export
 choice exact_interval one_of
   no_points
-  points_between lower_bound upper_bound
+  points_between ValidatedSpan
+
+singleton_interval :
+  (lower_kind, upper_kind : endpoint_membership) →
+  (lower_value, upper_value : ExactRational) →
+  So (rational_equal lower_value upper_value) →
+  exact_interval
+singleton_interval included included lower_value upper_value equality =
+  points_between
+    (MkValidatedSpan
+      (lower_at lower_value included)
+      (upper_at upper_value included)
+      (ClosedSingleton equality))
+singleton_interval _ _ _ _ _ = no_points
 
 public export
 make_interval : lower_bound → upper_bound → exact_interval
-make_interval (lower_at lo lower_kind) (upper_at hi upper_kind) =
-  if rational_less hi lo
-    then no_points
-    else if rational_equal lo hi && not (is_included lower_kind && is_included upper_kind)
-      then no_points
-      else points_between (lower_at lo lower_kind) (upper_at hi upper_kind)
-make_interval lo hi = points_between lo hi
+make_interval unbounded_below upper_boundary =
+  points_between
+    (MkValidatedSpan unbounded_below upper_boundary UnboundedBelow)
+make_interval lower_boundary unbounded_above =
+  points_between
+    (MkValidatedSpan lower_boundary unbounded_above UnboundedAbove)
+make_interval
+  (lower_at lower_value lower_kind)
+  (upper_at upper_value upper_kind) =
+    case choose (rational_less lower_value upper_value) of
+      Left strict_ordering =>
+        points_between
+          (MkValidatedSpan
+            (lower_at lower_value lower_kind)
+            (upper_at upper_value upper_kind)
+            (StrictlyOrdered strict_ordering))
+      Right _ =>
+        case choose (rational_equal lower_value upper_value) of
+          Left equality =>
+            singleton_interval
+              lower_kind
+              upper_kind
+              lower_value
+              upper_value
+              equality
+          Right _ => no_points
 
 public export
 closed_interval : ExactRational → ExactRational → exact_interval
-closed_interval lo hi = make_interval (lower_at lo included) (upper_at hi included)
+closed_interval lower_value upper_value =
+  make_interval
+    (lower_at lower_value included)
+    (upper_at upper_value included)
 
 public export
 open_interval : ExactRational → ExactRational → exact_interval
-open_interval lo hi = make_interval (lower_at lo excluded) (upper_at hi excluded)
+open_interval lower_value upper_value =
+  make_interval
+    (lower_at lower_value excluded)
+    (upper_at upper_value excluded)
 
 public export
 left_open_interval : ExactRational → ExactRational → exact_interval
-left_open_interval lo hi = make_interval (lower_at lo excluded) (upper_at hi included)
+left_open_interval lower_value upper_value =
+  make_interval
+    (lower_at lower_value excluded)
+    (upper_at upper_value included)
 
 public export
 right_open_interval : ExactRational → ExactRational → exact_interval
-right_open_interval lo hi = make_interval (lower_at lo included) (upper_at hi excluded)
+right_open_interval lower_value upper_value =
+  make_interval
+    (lower_at lower_value included)
+    (upper_at upper_value excluded)
 
 public export
 all_numbers : exact_interval
@@ -128,69 +206,104 @@ all_numbers = make_interval unbounded_below unbounded_above
 
 public export
 below : ExactRational → endpoint_membership → exact_interval
-below upper inclusion = make_interval unbounded_below (upper_at upper inclusion)
+below upper_value membership =
+  make_interval unbounded_below (upper_at upper_value membership)
 
 public export
 above : ExactRational → endpoint_membership → exact_interval
-above lower inclusion = make_interval (lower_at lower inclusion) unbounded_above
+above lower_value membership =
+  make_interval (lower_at lower_value membership) unbounded_above
 
 public export
 open_left : exact_interval → exact_interval
 open_left no_points = no_points
-open_left (points_between unbounded_below hi) = points_between unbounded_below hi
-open_left (points_between (lower_at lo _) hi) =
-  make_interval (lower_at lo excluded) hi
+open_left
+  (points_between
+    (MkValidatedSpan unbounded_below upper_boundary _)) =
+      make_interval unbounded_below upper_boundary
+open_left
+  (points_between
+    (MkValidatedSpan (lower_at lower_value _) upper_boundary _)) =
+      make_interval
+        (lower_at lower_value excluded)
+        upper_boundary
 
 public export
 open_right : exact_interval → exact_interval
 open_right no_points = no_points
-open_right (points_between lo unbounded_above) = points_between lo unbounded_above
-open_right (points_between lo (upper_at hi _)) =
-  make_interval lo (upper_at hi excluded)
+open_right
+  (points_between
+    (MkValidatedSpan lower_boundary unbounded_above _)) =
+      make_interval lower_boundary unbounded_above
+open_right
+  (points_between
+    (MkValidatedSpan lower_boundary (upper_at upper_value _) _)) =
+      make_interval
+        lower_boundary
+        (upper_at upper_value excluded)
 
 public export
 lower_allows : lower_bound → ExactRational → Bool
 lower_allows unbounded_below _ = True
-lower_allows (lower_at lo included) x = rational_less_or_equal lo x
-lower_allows (lower_at lo excluded) x = rational_less lo x
+lower_allows (lower_at lower_value included) value =
+  rational_less_or_equal lower_value value
+lower_allows (lower_at lower_value excluded) value =
+  rational_less lower_value value
 
 public export
 upper_allows : upper_bound → ExactRational → Bool
 upper_allows unbounded_above _ = True
-upper_allows (upper_at hi included) x = rational_less_or_equal x hi
-upper_allows (upper_at hi excluded) x = rational_less x hi
+upper_allows (upper_at upper_value included) value =
+  rational_less_or_equal value upper_value
+upper_allows (upper_at upper_value excluded) value =
+  rational_less value upper_value
 
 public export
 contains : exact_interval → ExactRational → Bool
 contains no_points _ = False
-contains (points_between lo hi) x =
-  lower_allows lo x && upper_allows hi x
+contains
+  (points_between
+    (MkValidatedSpan lower_boundary upper_boundary _))
+  value =
+    lower_allows lower_boundary value &&
+    upper_allows upper_boundary value
 
 public export
-same_inclusion : endpoint_membership → endpoint_membership → Bool
-same_inclusion included included = True
-same_inclusion excluded excluded = True
-same_inclusion _ _ = False
+same_membership : endpoint_membership → endpoint_membership → Bool
+same_membership included included = True
+same_membership excluded excluded = True
+same_membership _ _ = False
 
 public export
 same_lower : lower_bound → lower_bound → Bool
 same_lower unbounded_below unbounded_below = True
-same_lower (lower_at x i) (lower_at y j) =
-  rational_equal x y && same_inclusion i j
+same_lower
+  (lower_at left_value left_kind)
+  (lower_at right_value right_kind) =
+    rational_equal left_value right_value &&
+    same_membership left_kind right_kind
 same_lower _ _ = False
 
 public export
 same_upper : upper_bound → upper_bound → Bool
 same_upper unbounded_above unbounded_above = True
-same_upper (upper_at x i) (upper_at y j) =
-  rational_equal x y && same_inclusion i j
+same_upper
+  (upper_at left_value left_kind)
+  (upper_at right_value right_kind) =
+    rational_equal left_value right_value &&
+    same_membership left_kind right_kind
 same_upper _ _ = False
 
 public export
 interval_equal : exact_interval → exact_interval → Bool
 interval_equal no_points no_points = True
-interval_equal (points_between lo hi) (points_between lo2 hi2) =
-  same_lower lo lo2 && same_upper hi hi2
+interval_equal
+  (points_between
+    (MkValidatedSpan left_lower left_upper _))
+  (points_between
+    (MkValidatedSpan right_lower right_upper _)) =
+      same_lower left_lower right_lower &&
+      same_upper left_upper right_upper
 interval_equal _ _ = False
 
 -- Set-valued/Minkowski addition. No probabilistic independence is assumed.
@@ -198,71 +311,98 @@ public export
 add_lower : lower_bound → lower_bound → lower_bound
 add_lower unbounded_below _ = unbounded_below
 add_lower _ unbounded_below = unbounded_below
-add_lower (lower_at a i) (lower_at b j) =
-  lower_at (add_rational a b) (both_included i j)
+add_lower
+  (lower_at left_value left_kind)
+  (lower_at right_value right_kind) =
+    lower_at
+      (add_rational left_value right_value)
+      (both_included left_kind right_kind)
 
 public export
 add_upper : upper_bound → upper_bound → upper_bound
 add_upper unbounded_above _ = unbounded_above
 add_upper _ unbounded_above = unbounded_above
-add_upper (upper_at a i) (upper_at b j) =
-  upper_at (add_rational a b) (both_included i j)
+add_upper
+  (upper_at left_value left_kind)
+  (upper_at right_value right_kind) =
+    upper_at
+      (add_rational left_value right_value)
+      (both_included left_kind right_kind)
 
 public export
 add_interval : exact_interval → exact_interval → exact_interval
 add_interval no_points _ = no_points
 add_interval _ no_points = no_points
-add_interval (points_between a b) (points_between c d) =
-  make_interval (add_lower a c) (add_upper b d)
+add_interval
+  (points_between (MkValidatedSpan left_lower left_upper _))
+  (points_between (MkValidatedSpan right_lower right_upper _)) =
+    make_interval
+      (add_lower left_lower right_lower)
+      (add_upper left_upper right_upper)
 
 public export
 lower_of_negated_upper : upper_bound → lower_bound
 lower_of_negated_upper unbounded_above = unbounded_below
-lower_of_negated_upper (upper_at x i) = lower_at (negate_rational x) i
+lower_of_negated_upper (upper_at value membership) =
+  lower_at (negate_rational value) membership
 
 public export
 upper_of_negated_lower : lower_bound → upper_bound
 upper_of_negated_lower unbounded_below = unbounded_above
-upper_of_negated_lower (lower_at x i) = upper_at (negate_rational x) i
+upper_of_negated_lower (lower_at value membership) =
+  upper_at (negate_rational value) membership
 
 public export
 negate_interval : exact_interval → exact_interval
 negate_interval no_points = no_points
-negate_interval (points_between lo hi) =
-  make_interval (lower_of_negated_upper hi) (upper_of_negated_lower lo)
+negate_interval
+  (points_between
+    (MkValidatedSpan lower_boundary upper_boundary _)) =
+      make_interval
+        (lower_of_negated_upper upper_boundary)
+        (upper_of_negated_lower lower_boundary)
 
 -- Ordinary interval subtraction loses repeated-expression correlation.
 -- `x:[0,1]` and `x−x` evaluate to `[-1,1]` here, not the singleton zero.
 public export
 subtract_interval : exact_interval → exact_interval → exact_interval
-subtract_interval a b = add_interval a (negate_interval b)
+subtract_interval left right =
+  add_interval left (negate_interval right)
 
 -- Intersection is restriction by known set bounds, not statistical conditioning.
 public export
 stronger_lower : lower_bound → lower_bound → lower_bound
-stronger_lower unbounded_below b = b
-stronger_lower a unbounded_below = a
-stronger_lower (lower_at a ai) (lower_at b bi) =
-  if rational_less a b
-    then lower_at b bi
-    else if rational_less b a
-      then lower_at a ai
-      else lower_at a (both_included ai bi)
+stronger_lower unbounded_below right = right
+stronger_lower left unbounded_below = left
+stronger_lower
+  (lower_at left_value left_kind)
+  (lower_at right_value right_kind) =
+    if rational_less left_value right_value
+      then lower_at right_value right_kind
+      else if rational_less right_value left_value
+        then lower_at left_value left_kind
+        else lower_at left_value (both_included left_kind right_kind)
 
 public export
 stronger_upper : upper_bound → upper_bound → upper_bound
-stronger_upper unbounded_above b = b
-stronger_upper a unbounded_above = a
-stronger_upper (upper_at a ai) (upper_at b bi) =
-  if rational_less a b
-    then upper_at a ai
-    else if rational_less b a
-      then upper_at b bi
-      else upper_at a (both_included ai bi)
+stronger_upper unbounded_above right = right
+stronger_upper left unbounded_above = left
+stronger_upper
+  (upper_at left_value left_kind)
+  (upper_at right_value right_kind) =
+    if rational_less left_value right_value
+      then upper_at left_value left_kind
+      else if rational_less right_value left_value
+        then upper_at right_value right_kind
+        else upper_at left_value (both_included left_kind right_kind)
 
 public export
 intersect_interval : exact_interval → exact_interval → exact_interval
 intersect_interval no_points _ = no_points
 intersect_interval _ no_points = no_points
-intersect_interval (points_between lo hi) (points_between lo2 hi2) =
-  make_interval (stronger_lower lo lo2) (stronger_upper hi hi2)
+intersect_interval
+  (points_between (MkValidatedSpan left_lower left_upper _))
+  (points_between (MkValidatedSpan right_lower right_upper _)) =
+    make_interval
+      (stronger_lower left_lower right_lower)
+      (stronger_upper left_upper right_upper)
