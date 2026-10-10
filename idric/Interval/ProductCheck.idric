@@ -1,0 +1,93 @@
+module Interval.ProductCheck
+
+import Interval.Exact
+import Interval.Product
+
+%unbound_implicits off
+
+positive_closed_product :
+  bounded_product_matches
+    (multiply_if_bounded
+      (closed_interval (whole 1) (whole 3))
+      (closed_interval (whole 4) (whole 9)))
+    (closed_interval (whole 4) (whole 27)) = True
+positive_closed_product = Refl
+
+crossing_zero_product :
+  bounded_product_matches
+    (multiply_if_bounded
+      (closed_interval (whole (-2)) (whole 3))
+      (closed_interval (whole 4) (whole 5)))
+    (closed_interval (whole (-10)) (whole 15)) = True
+crossing_zero_product = Refl
+
+negative_by_negative_product :
+  bounded_product_matches
+    (multiply_if_bounded
+      (closed_interval (whole (-3)) (whole (-2)))
+      (closed_interval (whole (-5)) (whole (-4))))
+    (closed_interval (whole 8) (whole 15)) = True
+negative_by_negative_product = Refl
+
+left_open_positive_product :
+  bounded_product_matches
+    (multiply_if_bounded
+      (left_open_interval (whole 1) (whole 2))
+      (closed_interval (whole 3) (whole 4)))
+    (left_open_interval (whole 3) (whole 8)) = True
+left_open_positive_product = Refl
+
+right_open_positive_product :
+  bounded_product_matches
+    (multiply_if_bounded
+      (right_open_interval (whole 1) (whole 2))
+      (closed_interval (whole 3) (whole 4)))
+    (right_open_interval (whole 3) (whole 8)) = True
+right_open_positive_product = Refl
+
+open_sign_crossing_product :
+  bounded_product_matches
+    (multiply_if_bounded
+      (open_interval (whole (-1)) (whole 1))
+      (open_interval (whole (-1)) (whole 1)))
+    (open_interval (whole (-1)) (whole 1)) = True
+open_sign_crossing_product = Refl
+
+-- Zero may be attained through an interior point of the other factor, so
+-- endpoint-pair openness alone is insufficient.
+zero_singleton_times_open :
+  bounded_product_matches
+    (multiply_if_bounded
+      (closed_interval (whole 0) (whole 0))
+      (open_interval (whole 1) (whole 2)))
+    (closed_interval (whole 0) (whole 0)) = True
+zero_singleton_times_open = Refl
+
+included_zero_times_open_positive :
+  bounded_product_matches
+    (multiply_if_bounded
+      (closed_interval (whole 0) (whole 1))
+      (open_interval (whole 0) (whole 1)))
+    (right_open_interval (whole 0) (whole 1)) = True
+included_zero_times_open_positive = Refl
+
+empty_times_unbounded_is_empty :
+  bounded_product_matches
+    (multiply_if_bounded no_points Interval.Exact.all_numbers)
+    no_points = True
+empty_times_unbounded_is_empty = Refl
+
+nonempty_unbounded_product_is_deferred :
+  product_is_deferred
+    (multiply_if_bounded
+      Interval.Exact.all_numbers
+      (closed_interval (whole 1) (whole 2))) = True
+nonempty_unbounded_product_is_deferred = Refl
+
+exact_fraction_product :
+  rational_equal
+    (multiply_rational
+      (over 1 (OnePlus 3))
+      (over 2 (OnePlus 2)))
+    (over 1 (OnePlus 5)) = True
+exact_fraction_product = Refl
