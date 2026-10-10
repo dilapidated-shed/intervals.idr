@@ -1,63 +1,64 @@
 module Interval.SignedDifferenceCheck
 
 import Data.So
+import Interval.NaturalProofs
 import Interval.SignedDifference
 
 %unbound_implicits off
 
-minus_three_lte_minus_one :
-  DifferenceLTE
+minus_three_before_minus_one :
+  DifferenceOrder
     (negative_difference 3)
     (negative_difference 1)
-minus_three_lte_minus_one = difference_lte_evidence Oh
+minus_three_before_minus_one = difference_order_evidence Oh
 
-one_lte_three :
-  DifferenceLTE
+one_before_three :
+  DifferenceOrder
     (positive_difference 1)
     (positive_difference 3)
-one_lte_three = difference_lte_evidence Oh
+one_before_three = difference_order_evidence Oh
 
-two_lte_four :
-  DifferenceLTE
+two_before_four :
+  DifferenceOrder
     (positive_difference 2)
     (positive_difference 4)
-two_lte_four = difference_lte_evidence Oh
+two_before_four = difference_order_evidence Oh
 
 -- (-3) + 2 <= (-1) + 4 follows from the general monotonicity theorem.
-monotone_sum_proof :
-  DifferenceLTE
+monotone_sum_evidence :
+  DifferenceOrder
     (add_difference (negative_difference 3) (positive_difference 2))
     (add_difference (negative_difference 1) (positive_difference 4))
-monotone_sum_proof =
-  difference_add_lte minus_three_lte_minus_one two_lte_four
+monotone_sum_evidence =
+  difference_add_order minus_three_before_minus_one two_before_four
 
 monotone_sum_boolean :
-  difference_lte
+  difference_order
     (add_difference (negative_difference 3) (positive_difference 2))
     (add_difference (negative_difference 1) (positive_difference 4)) = True
 monotone_sum_boolean =
-  soToEq (difference_lte_boolean monotone_sum_proof)
+  truth_to_equality (difference_order_boolean monotone_sum_evidence)
 
 -- Negating -3 <= -1 gives 1 <= 3.
 negation_reverses_order :
-  DifferenceLTE
+  DifferenceOrder
     (negate_difference (negative_difference 1))
     (negate_difference (negative_difference 3))
 negation_reverses_order =
-  difference_negate_reverses_lte minus_three_lte_minus_one
+  difference_negate_reverses_order minus_three_before_minus_one
 
 scale_preserves_order :
-  DifferenceLTE
+  DifferenceOrder
     (scale_difference 7 (positive_difference 1))
     (scale_difference 7 (positive_difference 3))
-scale_preserves_order = difference_scale_lte 7 one_lte_three
+scale_preserves_order = difference_scale_order 7 one_before_three
 
 scale_preserves_order_boolean :
-  difference_lte
+  difference_order
     (scale_difference 7 (positive_difference 1))
     (scale_difference 7 (positive_difference 3)) = True
 scale_preserves_order_boolean =
-  soToEq (difference_lte_boolean scale_preserves_order)
+  truth_to_equality (difference_order_boolean scale_preserves_order)
 
 -- `3 − 2` and `1 − 0` are intentionally distinct representations of the same
 -- signed integer. Semantic equality is cross-sum equality, not pair identity.
@@ -72,9 +73,9 @@ noncanonical_order_antisymmetry :
     (Difference 3 2)
     (Difference 1 0)
 noncanonical_order_antisymmetry =
-  difference_lte_antisymmetric
-    (difference_lte_evidence Oh)
-    (difference_lte_evidence Oh)
+  difference_order_antisymmetric
+    (difference_order_evidence Oh)
+    (difference_order_evidence Oh)
 
 addition_respects_noncanonical_values :
   DifferenceEquivalent
@@ -94,5 +95,5 @@ exact_signed_product :
 exact_signed_product = Refl
 
 reflexive_open_value :
-  (value : SignedDifference) → DifferenceLTE value value
-reflexive_open_value = difference_lte_reflexive
+  (value : SignedDifference) → DifferenceOrder value value
+reflexive_open_value = difference_order_reflexive
