@@ -52,10 +52,12 @@ natural_order_reflexive = reflexive
 
 public export
 natural_order_antisymmetric :
+  {left, right : Nat} ->
   NaturalOrder left right ->
   NaturalOrder right left ->
   left = right
-natural_order_antisymmetric = antisymmetric
+natural_order_antisymmetric {left} {right} left_to_right right_to_left =
+  antisymmetric left_to_right right_to_left
 
 -- (a+b)+(c+d) = (a+c)+(b+d).
 public export
@@ -87,8 +89,8 @@ cross_sum_add_order
   {a} {b} {c} {d} {e} {f} {g} {h}
   first_order
   second_order =
-    rewrite sym (natural_plus_shuffle a e d h) in
-    rewrite sym (natural_plus_shuffle c g b f) in
+    rewrite natural_plus_shuffle a e d h in
+    rewrite sym (natural_plus_shuffle c b g f) in
     plusLteMonotone first_order second_order
 
 -- Negating both formal differences reverses their order.
@@ -128,6 +130,6 @@ cross_sum_add_equivalent
   first_equal
   second_equal = Calc $
     |~ (a + e) + (d + h)
-    ~~ (a + d) + (e + h) ...(sym (natural_plus_shuffle a e d h))
+    ~~ (a + d) + (e + h) ...(natural_plus_shuffle a e d h)
     ~~ (c + b) + (g + f) ...(cong2 (+) first_equal second_equal)
-    ~~ (c + g) + (b + f) ...(natural_plus_shuffle c g b f)
+    ~~ (c + g) + (b + f) ...(natural_plus_shuffle c b g f)
