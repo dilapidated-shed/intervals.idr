@@ -87,10 +87,102 @@ empty_product :
     (computed_product no_points) = True
 empty_product = Refl
 
-unbounded_product_is_explicitly_deferred :
+-- Sign-sensitive unbounded products.
+
+closed_positive_ray_product :
   same_product_result
     (multiply_intervals
       (above (whole 0) included)
       (closed_interval (whole 2) (whole 3)))
-    unbounded_product_deferred = True
-unbounded_product_is_explicitly_deferred = Refl
+    (computed_product (above (whole 0) included)) = True
+closed_positive_ray_product = Refl
+
+open_positive_ray_product :
+  same_product_result
+    (multiply_intervals
+      (above (whole 0) excluded)
+      (open_interval (whole 0) (whole 2)))
+    (computed_product (above (whole 0) excluded)) = True
+open_positive_ray_product = Refl
+
+negative_ray_times_positive :
+  same_product_result
+    (multiply_intervals
+      (below (whole (-1)) included)
+      (closed_interval (whole 2) (whole 3)))
+    (computed_product (below (whole (-2)) included)) = True
+negative_ray_times_positive = Refl
+
+negative_ray_times_negative_ray :
+  same_product_result
+    (multiply_intervals
+      (below (whole (-1)) included)
+      (below (whole (-2)) included))
+    (computed_product (above (whole 2) included)) = True
+negative_ray_times_negative_ray = Refl
+
+open_negative_rays_product :
+  same_product_result
+    (multiply_intervals
+      (below (whole 0) excluded)
+      (below (whole 0) excluded))
+    (computed_product (above (whole 0) excluded)) = True
+open_negative_rays_product = Refl
+
+closed_negative_rays_product :
+  same_product_result
+    (multiply_intervals
+      (below (whole 0) included)
+      (below (whole 0) included))
+    (computed_product (above (whole 0) included)) = True
+closed_negative_rays_product = Refl
+
+opposite_open_rays_product :
+  same_product_result
+    (multiply_intervals
+      (above (whole 0) excluded)
+      (below (whole 0) excluded))
+    (computed_product (below (whole 0) excluded)) = True
+opposite_open_rays_product = Refl
+
+nonnegative_by_nonpositive :
+  same_product_result
+    (multiply_intervals
+      (above (whole 0) included)
+      (closed_interval (whole (-1)) (whole 0)))
+    (computed_product (below (whole 0) included)) = True
+nonnegative_by_nonpositive = Refl
+
+mixed_lower_ray_times_positive_ray :
+  same_product_result
+    (multiply_intervals
+      (above (whole (-1)) included)
+      (above (whole 2) included))
+    (computed_product Interval.Exact.all_numbers) = True
+mixed_lower_ray_times_positive_ray = Refl
+
+whole_line_times_nonzero :
+  same_product_result
+    (multiply_intervals
+      Interval.Exact.all_numbers
+      (closed_interval (whole 2) (whole 2)))
+    (computed_product Interval.Exact.all_numbers) = True
+whole_line_times_nonzero = Refl
+
+whole_line_times_nonnegative :
+  same_product_result
+    (multiply_intervals
+      Interval.Exact.all_numbers
+      (closed_interval (whole 0) (whole 1)))
+    (computed_product Interval.Exact.all_numbers) = True
+whole_line_times_nonnegative = Refl
+
+-- Zero annihilates even a two-sided unbounded interval. No 0×∞ placeholder is
+-- introduced; the product is defined from finite members of the two sets.
+whole_line_times_zero :
+  same_product_result
+    (multiply_intervals
+      Interval.Exact.all_numbers
+      (closed_interval (whole 0) (whole 0)))
+    (computed_product (closed_interval (whole 0) (whole 0))) = True
+whole_line_times_zero = Refl

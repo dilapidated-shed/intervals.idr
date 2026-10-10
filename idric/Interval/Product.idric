@@ -143,26 +143,227 @@ multiply_finite_spans
                  (lower_at lower lower_kind)
                  (upper_at upper upper_kind)
 
--- Unbounded multiplication has sign-sensitive infinity and zero cases. The
--- first slice refuses that case explicitly rather than manufacturing a single
--- interval with unsound endpoints.
+-- Finite endpoints are retained even when the other side of an interval is
+-- unbounded. Their products determine any finite extremum that remains.
+public export
+finite_lower_endpoint :
+  lower_bound →
+  Maybe (ExactRational, endpoint_membership)
+finite_lower_endpoint unbounded_below = Nothing
+finite_lower_endpoint (lower_at value kind) = Just (value, kind)
+
+public export
+finite_upper_endpoint :
+  upper_bound →
+  Maybe (ExactRational, endpoint_membership)
+finite_upper_endpoint unbounded_above = Nothing
+finite_upper_endpoint (upper_at value kind) = Just (value, kind)
+
+public export
+candidate_if_finite :
+  Maybe (ExactRational, endpoint_membership) →
+  Maybe (ExactRational, endpoint_membership) →
+  Maybe ProductCandidate
+candidate_if_finite Nothing _ = Nothing
+candidate_if_finite _ Nothing = Nothing
+candidate_if_finite
+  (Just (left_value, left_kind))
+  (Just (right_value, right_kind)) =
+    Just
+      (candidate_product
+        left_value left_kind
+        right_value right_kind)
+
+public export
+lower_optional_candidate :
+  Maybe ProductCandidate →
+  Maybe ProductCandidate →
+  Maybe ProductCandidate
+lower_optional_candidate Nothing right = right
+lower_optional_candidate left Nothing = left
+lower_optional_candidate (Just left) (Just right) =
+  Just (lower_candidate left right)
+
+public export
+upper_optional_candidate :
+  Maybe ProductCandidate →
+  Maybe ProductCandidate →
+  Maybe ProductCandidate
+upper_optional_candidate Nothing right = right
+upper_optional_candidate left Nothing = left
+upper_optional_candidate (Just left) (Just right) =
+  Just (upper_candidate left right)
+
+public export
+lower_has_negative_values : lower_bound → Bool
+lower_has_negative_values unbounded_below = True
+lower_has_negative_values (lower_at value _) =
+  rational_less value (whole 0)
+
+public export
+upper_has_positive_values : upper_bound → Bool
+upper_has_positive_values unbounded_above = True
+upper_has_positive_values (upper_at value _) =
+  rational_less (whole 0) value
+
+public export
+extends_to_negative_infinity : lower_bound → Bool
+extends_to_negative_infinity unbounded_below = True
+extends_to_negative_infinity _ = False
+
+public export
+extends_to_positive_infinity : upper_bound → Bool
+extends_to_positive_infinity unbounded_above = True
+extends_to_positive_infinity _ = False
+
+-- A product is unbounded in a direction when an unbounded sign in either
+-- operand can be paired with a nonzero value of the sign that drives the
+-- product toward that direction.
+public export
+product_unbounded_below :
+  lower_bound → upper_bound →
+  lower_bound → upper_bound →
+  Bool
+product_unbounded_below
+  left_lower left_upper right_lower right_upper =
+    (extends_to_positive_infinity left_upper &&
+     lower_has_negative_values right_lower) ||
+    (extends_to_negative_infinity left_lower &&
+     upper_has_positive_values right_upper) ||
+    (extends_to_positive_infinity right_upper &&
+     lower_has_negative_values left_lower) ||
+    (extends_to_negative_infinity right_lower &&
+     upper_has_positive_values left_upper)
+
+public export
+product_unbounded_above :
+  lower_bound → upper_bound →
+  lower_bound → upper_bound →
+  Bool
+product_unbounded_above
+  left_lower left_upper right_lower right_upper =
+    (extends_to_positive_infinity left_upper &&
+     upper_has_positive_values right_upper) ||
+    (extends_to_negative_infinity left_lower &&
+     lower_has_negative_values right_lower) ||
+    (extends_to_positive_infinity right_upper &&
+     upper_has_positive_values left_upper) ||
+    (extends_to_negative_infinity right_lower &&
+     lower_has_negative_values left_lower)
+
+public export
+zero_product_candidate : Bool → Maybe ProductCandidate
+zero_product_candidate True = Just (Candidate (whole 0) included)
+zero_product_candidate False = Nothing
+
+public export
+product_candidates :
+  lower_bound → upper_bound →
+  lower_bound → upper_bound →
+  Bool →
+  (Maybe ProductCandidate, Maybe ProductCandidate)
+product_candidates
+  left_lower left_upper right_lower right_upper zero_is_attained =
+    let lower_lower =
+          candidate_if_finite
+            (finite_lower_endpoint left_lower)
+            (finite_lower_endpoint right_lower)
+        lower_upper =
+          candidate_if_finite
+            (finite_lower_endpoint left_lower)
+            (finite_upper_endpoint right_upper)
+        upper_lower =
+          candidate_if_finite
+            (finite_upper_endpoint left_upper)
+            (finite_lower_endpoint right_lower)
+        upper_upper =
+          candidate_if_finite
+            (finite_upper_endpoint left_upper)
+            (finite_upper_endpoint right_upper)
+        first_lower = lower_optional_candidate lower_lower lower_upper
+        second_lower = lower_optional_candidate upper_lower upper_upper
+        first_upper = upper_optional_candidate lower_lower lower_upper
+        second_upper = upper_optional_candidate upper_lower upper_upper
+        zero_candidate = zero_product_candidate zero_is_attained
+    in ( lower_optional_candidate
+           (lower_optional_candidate first_lower second_lower)
+           zero_candidate
+       , upper_optional_candidate
+           (upper_optional_candidate first_upper second_upper)
+           zero_candidate
+       )
+
+-- The deferred branch is now a fail-closed guard for an internally missing
+-- finite candidate. For valid nonempty intervals, the sign analysis and finite
+-- endpoint candidates cover all bounded and unbounded products.
 public export
 choice interval_product_result one_of
   computed_product exact_interval
   unbounded_product_deferred
 
 public export
+assemble_product :
+  Bool →
+  Bool →
+  Maybe ProductCandidate →
+  Maybe ProductCandidate →
+  interval_product_result
+assemble_product True True _ _ =
+  computed_product Interval.Exact.all_numbers
+assemble_product True False _ Nothing =
+  unbounded_product_deferred
+assemble_product True False _ (Just (Candidate upper upper_kind)) =
+  computed_product
+    (make_interval unbounded_below (upper_at upper upper_kind))
+assemble_product False True Nothing _ =
+  unbounded_product_deferred
+assemble_product False True (Just (Candidate lower lower_kind)) _ =
+  computed_product
+    (make_interval (lower_at lower lower_kind) unbounded_above)
+assemble_product False False Nothing _ =
+  unbounded_product_deferred
+assemble_product False False _ Nothing =
+  unbounded_product_deferred
+assemble_product
+  False
+  False
+  (Just (Candidate lower lower_kind))
+  (Just (Candidate upper upper_kind)) =
+    computed_product
+      (make_interval
+        (lower_at lower lower_kind)
+        (upper_at upper upper_kind))
+
+public export
 multiply_intervals : exact_interval → exact_interval → interval_product_result
 multiply_intervals no_points _ = computed_product no_points
 multiply_intervals _ no_points = computed_product no_points
-multiply_intervals left right =
-  case finite_span_view left of
-    Nothing => unbounded_product_deferred
-    Just left_span =>
-      case finite_span_view right of
-        Nothing => unbounded_product_deferred
-        Just right_span =>
-          computed_product (multiply_finite_spans left_span right_span)
+multiply_intervals
+  left@(points_between (Span left_lower left_upper _))
+  right@(points_between (Span right_lower right_upper _)) =
+    let zero_is_attained =
+          contains left (whole 0) ||
+          contains right (whole 0)
+        candidates =
+          product_candidates
+            left_lower left_upper
+            right_lower right_upper
+            zero_is_attained
+        lower_is_unbounded =
+          product_unbounded_below
+            left_lower left_upper
+            right_lower right_upper
+        upper_is_unbounded =
+          product_unbounded_above
+            left_lower left_upper
+            right_lower right_upper
+    in case candidates of
+         (lower_candidate, upper_candidate) =>
+           assemble_product
+             lower_is_unbounded
+             upper_is_unbounded
+             lower_candidate
+             upper_candidate
 
 public export
 same_product_result : interval_product_result → interval_product_result → Bool
