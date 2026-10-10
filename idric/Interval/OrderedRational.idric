@@ -1,0 +1,215 @@
+module Interval.OrderedRational
+
+import Data.So
+import Interval.SignedDifference
+
+%unbound_implicits off
+
+-- A positive denominator is a successor by construction. Zero has no
+-- representation, so rational order never requires a separate nonzero premise.
+public export
+data PositiveNatural = OneMore Number
+
+public export
+positive_value : PositiveNatural → Number
+positive_value (OneMore predecessor) = S predecessor
+
+public export
+multiply_positive : PositiveNatural → PositiveNatural → PositiveNatural
+multiply_positive (OneMore left) (OneMore right) =
+  OneMore (left + right + left × right)
+
+-- This proof-oriented rational type is separate from the current public
+-- `ExactRational` representation. Its signed numerator has structural order
+-- laws, allowing open-context proofs without assuming primitive Integer laws.
+public export
+data OrderedRational = Fraction SignedDifference PositiveNatural
+
+public export
+whole_ordered : SignedDifference → OrderedRational
+whole_ordered numerator = Fraction numerator (OneMore 0)
+
+public export
+fraction_ordered : SignedDifference → PositiveNatural → OrderedRational
+fraction_ordered = Fraction
+
+public export
+add_ordered : OrderedRational → OrderedRational → OrderedRational
+add_ordered
+  (Fraction left_numerator left_denominator)
+  (Fraction right_numerator right_denominator) =
+    Fraction
+      (add_difference
+        (scale_difference
+          (positive_value right_denominator)
+          left_numerator)
+        (scale_difference
+          (positive_value left_denominator)
+          right_numerator))
+      (multiply_positive left_denominator right_denominator)
+
+public export
+negate_ordered : OrderedRational → OrderedRational
+negate_ordered (Fraction numerator denominator) =
+  Fraction (negate_difference numerator) denominator
+
+public export
+subtract_ordered : OrderedRational → OrderedRational → OrderedRational
+subtract_ordered left right = add_ordered left (negate_ordered right)
+
+public export
+multiply_ordered : OrderedRational → OrderedRational → OrderedRational
+multiply_ordered
+  (Fraction left_numerator left_denominator)
+  (Fraction right_numerator right_denominator) =
+    Fraction
+      (multiply_difference left_numerator right_numerator)
+      (multiply_positive left_denominator right_denominator)
+
+-- Fraction equality is cross-scaled signed equality. Normalization is not
+-- required: 1/2 and 2/4 can be equivalent without sharing a representation.
+public export
+RationalEquivalent : OrderedRational → OrderedRational → Type
+RationalEquivalent
+  (Fraction left_numerator left_denominator)
+  (Fraction right_numerator right_denominator) =
+    DifferenceEquivalent
+      (scale_difference
+        (positive_value right_denominator)
+        left_numerator)
+      (scale_difference
+        (positive_value left_denominator)
+        right_numerator)
+
+-- Positive denominators make the same cross-scaling valid for order.
+public export
+RationalOrder : OrderedRational → OrderedRational → Type
+RationalOrder
+  (Fraction left_numerator left_denominator)
+  (Fraction right_numerator right_denominator) =
+    DifferenceOrder
+      (scale_difference
+        (positive_value right_denominator)
+        left_numerator)
+      (scale_difference
+        (positive_value left_denominator)
+        right_numerator)
+
+public export
+ordered_rational_order : OrderedRational → OrderedRational → Bool
+ordered_rational_order
+  (Fraction left_numerator left_denominator)
+  (Fraction right_numerator right_denominator) =
+    difference_order
+      (scale_difference
+        (positive_value right_denominator)
+        left_numerator)
+      (scale_difference
+        (positive_value left_denominator)
+        right_numerator)
+
+public export
+rational_order_evidence :
+  (left, right : OrderedRational) →
+  So (ordered_rational_order left right) →
+  RationalOrder left right
+rational_order_evidence
+  (Fraction left_numerator left_denominator)
+  (Fraction right_numerator right_denominator)
+  evidence =
+    difference_order_evidence
+      (scale_difference
+        (positive_value right_denominator)
+        left_numerator)
+      (scale_difference
+        (positive_value left_denominator)
+        right_numerator)
+      evidence
+
+public export
+rational_order_boolean :
+  (left, right : OrderedRational) →
+  RationalOrder left right →
+  So (ordered_rational_order left right)
+rational_order_boolean
+  (Fraction left_numerator left_denominator)
+  (Fraction right_numerator right_denominator)
+  evidence =
+    difference_order_boolean
+      (scale_difference
+        (positive_value right_denominator)
+        left_numerator)
+      (scale_difference
+        (positive_value left_denominator)
+        right_numerator)
+      evidence
+
+public export
+decide_rational_order :
+  (left, right : OrderedRational) →
+  Dec (RationalOrder left right)
+decide_rational_order
+  (Fraction left_numerator left_denominator)
+  (Fraction right_numerator right_denominator) =
+    decide_difference_order
+      (scale_difference
+        (positive_value right_denominator)
+        left_numerator)
+      (scale_difference
+        (positive_value left_denominator)
+        right_numerator)
+
+public export
+rational_order_reflexive :
+  (value : OrderedRational) →
+  RationalOrder value value
+rational_order_reflexive (Fraction numerator denominator) =
+  difference_order_reflexive
+    (scale_difference (positive_value denominator) numerator)
+
+public export
+rational_order_antisymmetric :
+  (left, right : OrderedRational) →
+  RationalOrder left right →
+  RationalOrder right left →
+  RationalEquivalent left right
+rational_order_antisymmetric
+  (Fraction left_numerator left_denominator)
+  (Fraction right_numerator right_denominator)
+  left_to_right
+  right_to_left =
+    difference_order_antisymmetric
+      (scale_difference
+        (positive_value right_denominator)
+        left_numerator)
+      (scale_difference
+        (positive_value left_denominator)
+        right_numerator)
+      left_to_right
+      right_to_left
+
+public export
+rational_equivalent_reflexive :
+  (value : OrderedRational) →
+  RationalEquivalent value value
+rational_equivalent_reflexive (Fraction numerator denominator) =
+  difference_equivalent_reflexive
+    (scale_difference (positive_value denominator) numerator)
+
+public export
+rational_equivalent_symmetric :
+  (left, right : OrderedRational) →
+  RationalEquivalent left right →
+  RationalEquivalent right left
+rational_equivalent_symmetric
+  (Fraction left_numerator left_denominator)
+  (Fraction right_numerator right_denominator)
+  equivalent =
+    difference_equivalent_symmetric
+      (scale_difference
+        (positive_value right_denominator)
+        left_numerator)
+      (scale_difference
+        (positive_value left_denominator)
+        right_numerator)
+      equivalent
