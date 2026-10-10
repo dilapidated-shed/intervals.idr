@@ -46,17 +46,15 @@ fixed_rational_order_boolean
     difference_order left right
 
 public export
-fixed_order_evidence :
+fixed_order_reflexive :
   {denominator : PositiveDenominator} →
-  (left, right : FixedRational denominator) →
-  fixed_rational_order left right
-fixed_order_evidence
-  (RationalNumerator left)
-  (RationalNumerator right) =
-    difference_order_reflexive left
+  (value : FixedRational denominator) →
+  fixed_rational_order value value
+fixed_order_reflexive (RationalNumerator numerator) =
+  difference_order_reflexive numerator
 
--- The preceding reflexive helper is intentionally narrow. General evidence is
--- supplied from signed-numerator order, preserving the exact operands.
+-- General evidence is supplied from signed-numerator order, preserving the
+-- exact noncanonical operands.
 public export
 fixed_order_from_difference :
   {denominator : PositiveDenominator} →
