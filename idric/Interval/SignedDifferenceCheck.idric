@@ -49,8 +49,8 @@ addition_monotone_open :
   DifferenceOrder
     (add_difference first_left second_left)
     (add_difference first_right second_right)
-addition_monotone_open first_order second-order =
-  difference_add_order first_order second-order
+addition_monotone_open first_order second_order =
+  difference_add_order first_order second_order
 
 -- Negating -3 ≤ -1 gives 1 ≤ 3.
 negation_reverses_order :
