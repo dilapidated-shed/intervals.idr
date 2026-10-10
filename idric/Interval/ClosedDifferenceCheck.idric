@@ -2,6 +2,7 @@ module Interval.ClosedDifferenceCheck
 
 import Data.So
 import Interval.ClosedDifference
+import Interval.NaturalProofs
 import Interval.SignedDifference
 
 %unbound_implicits off
