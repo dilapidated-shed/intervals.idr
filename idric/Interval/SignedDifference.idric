@@ -1,16 +1,14 @@
 module Interval.SignedDifference
 
-import Data.Nat
-import Data.Nat.Order.Properties
 import Data.So
-import Syntax.PreorderReasoning
+import Interval.NaturalProofs
 
 %unbound_implicits off
 
 -- `Difference positive negative` represents the exact signed value
 -- `positive − negative`. The representation is deliberately not normalized:
 -- several pairs may denote the same integer, which keeps addition and its order
--- proofs structural instead of depending on primitive Integer laws.
+-- proofs structural instead of depending on primitive machine-integer laws.
 public export
 data SignedDifference = Difference Number Number
 
@@ -70,185 +68,129 @@ DifferenceEquivalent
 
 -- The same cross-sum construction supplies a proof-level order.
 public export
-DifferenceLTE : SignedDifference → SignedDifference → Type
-DifferenceLTE
+DifferenceOrder : SignedDifference → SignedDifference → Type
+DifferenceOrder
   (Difference left_positive left_negative)
   (Difference right_positive right_negative) =
-    LTE
+    NaturalOrder
       (left_positive + right_negative)
       (right_positive + left_negative)
 
 public export
-difference_lte : SignedDifference → SignedDifference → Bool
-difference_lte
+difference_order : SignedDifference → SignedDifference → Bool
+difference_order
   (Difference left_positive left_negative)
   (Difference right_positive right_negative) =
-    lte
+    natural_order
       (left_positive + right_negative)
       (right_positive + left_negative)
 
 public export
-difference_lte_evidence :
+difference_order_evidence :
   {left, right : SignedDifference} →
-  So (difference_lte left right) →
-  DifferenceLTE left right
-difference_lte_evidence
+  So (difference_order left right) →
+  DifferenceOrder left right
+difference_order_evidence
   {left = Difference left_positive left_negative}
   {right = Difference right_positive right_negative}
   evidence =
-    lteIsLTE
+    natural_order_from_true
       (left_positive + right_negative)
       (right_positive + left_negative)
       (soToEq evidence)
 
 public export
-difference_lte_boolean :
+difference_order_boolean :
   {left, right : SignedDifference} →
-  DifferenceLTE left right →
-  So (difference_lte left right)
-difference_lte_boolean
+  DifferenceOrder left right →
+  So (difference_order left right)
+difference_order_boolean
   {left = Difference left_positive left_negative}
   {right = Difference right_positive right_negative}
   evidence =
     eqToSo
-      (LteIslte
+      (natural_order_to_true
         (left_positive + right_negative)
         (right_positive + left_negative)
         evidence)
 
 public export
-decide_difference_lte :
+decide_difference_order :
   (left, right : SignedDifference) →
-  Dec (DifferenceLTE left right)
-decide_difference_lte
+  Dec (DifferenceOrder left right)
+decide_difference_order
   (Difference left_positive left_negative)
   (Difference right_positive right_negative) =
-    isLTE
+    decide_natural_order
       (left_positive + right_negative)
       (right_positive + left_negative)
 
 public export
-difference_lte_reflexive :
+difference_order_reflexive :
   (value : SignedDifference) →
-  DifferenceLTE value value
-difference_lte_reflexive (Difference _ _) = reflexive
+  DifferenceOrder value value
+difference_order_reflexive (Difference _ _) = natural_order_reflexive
 
 public export
-difference_lte_antisymmetric :
+difference_order_antisymmetric :
   {left, right : SignedDifference} →
-  DifferenceLTE left right →
-  DifferenceLTE right left →
+  DifferenceOrder left right →
+  DifferenceOrder right left →
   DifferenceEquivalent left right
-difference_lte_antisymmetric
+difference_order_antisymmetric
   {left = Difference _ _}
   {right = Difference _ _}
   left_to_right
   right_to_left =
-    antisymmetric left_to_right right_to_left
-
--- A reusable commutative-semiring rearrangement:
--- `(a+b)+(c+d) = (a+c)+(b+d)`.
-public export
-plus_shuffle :
-  (first, second, third, fourth : Number) →
-  (first + second) + (third + fourth) =
-  (first + third) + (second + fourth)
-plus_shuffle first second third fourth = Calc $
-  |~ (first + second) + (third + fourth)
-  ~~ first + (second + (third + fourth))
-       ...(sym (plusAssociative first second (third + fourth)))
-  ~~ first + ((second + third) + fourth)
-       ...(cong (first +) (plusAssociative second third fourth))
-  ~~ first + ((third + second) + fourth)
-       ...(cong (first +) (cong (+ fourth) (plusCommutative second third)))
-  ~~ first + (third + (second + fourth))
-       ...(cong (first +) (sym (plusAssociative third second fourth)))
-  ~~ (first + third) + (second + fourth)
-       ...(plusAssociative first third (second + fourth))
+    natural_order_antisymmetric left_to_right right_to_left
 
 -- Addition is monotone in both arguments. This is the first scalar law needed
 -- by a universal interval-addition enclosure proof.
 public export
-difference_add_lte :
+difference_add_order :
   {first_left, first_right : SignedDifference} →
   {second_left, second_right : SignedDifference} →
-  DifferenceLTE first_left first_right →
-  DifferenceLTE second_left second_right →
-  DifferenceLTE
+  DifferenceOrder first_left first_right →
+  DifferenceOrder second_left second_right →
+  DifferenceOrder
     (add_difference first_left second_left)
     (add_difference first_right second_right)
-difference_add_lte
-  {first_left = Difference first_left_positive first_left_negative}
-  {first_right = Difference first_right_positive first_right_negative}
-  {second_left = Difference second_left_positive second_left_negative}
-  {second_right = Difference second_right_positive second_right_negative}
+difference_add_order
+  {first_left = Difference _ _}
+  {first_right = Difference _ _}
+  {second_left = Difference _ _}
+  {second_right = Difference _ _}
   first_order
   second_order =
-    the
-      (LTE
-        ((first_left_positive + second_left_positive) +
-         (first_right_negative + second_right_negative))
-        ((first_right_positive + second_right_positive) +
-         (first_left_negative + second_left_negative)))
-      (rewrite sym
-        (plus_shuffle
-          first_left_positive
-          second_left_positive
-          first_right_negative
-          second_right_negative) in
-       rewrite sym
-        (plus_shuffle
-          first_right_positive
-          second_right_positive
-          first_left_negative
-          second_left_negative) in
-       plusLteMonotone first_order second_order)
+    cross_sum_add_order first_order second_order
 
 -- Negation reverses the signed order.
 public export
-difference_negate_reverses_lte :
+difference_negate_reverses_order :
   {left, right : SignedDifference} →
-  DifferenceLTE left right →
-  DifferenceLTE (negate_difference right) (negate_difference left)
-difference_negate_reverses_lte
-  {left = Difference left_positive left_negative}
-  {right = Difference right_positive right_negative}
+  DifferenceOrder left right →
+  DifferenceOrder (negate_difference right) (negate_difference left)
+difference_negate_reverses_order
+  {left = Difference _ _}
+  {right = Difference _ _}
   ordered =
-    the
-      (LTE
-        (right_negative + left_positive)
-        (left_negative + right_positive))
-      (rewrite plusCommutative left_positive right_negative in
-       rewrite plusCommutative right_positive left_negative in
-       ordered)
+    cross_sum_negate_order ordered
 
--- Multiplication by a natural factor is monotone, including the zero factor.
+-- Multiplication by a nonnegative whole factor is monotone, including zero.
 public export
-difference_scale_lte :
+difference_scale_order :
   (factor : Number) →
   {left, right : SignedDifference} →
-  DifferenceLTE left right →
-  DifferenceLTE
+  DifferenceOrder left right →
+  DifferenceOrder
     (scale_difference factor left)
     (scale_difference factor right)
-difference_scale_lte
+difference_scale_order
   factor
-  {left = Difference left_positive left_negative}
-  {right = Difference right_positive right_negative}
+  {left = Difference _ _}
+  {right = Difference _ _}
   ordered =
-    the
-      (LTE
-        (factor × left_positive + factor × right_negative)
-        (factor × right_positive + factor × left_negative))
-      (rewrite multDistributesOverPlusRight
-        factor left_positive right_negative in
-       rewrite multDistributesOverPlusRight
-        factor right_positive left_negative in
-       multLteMonotoneRight
-        factor
-        (left_positive + right_negative)
-        (right_positive + left_negative)
-        ordered)
+    cross_sum_scale_order factor ordered
 
 -- Addition respects semantic equality even though the pair representation is
 -- intentionally noncanonical.
@@ -262,27 +204,10 @@ difference_add_respects_equivalent :
     (add_difference first_left second_left)
     (add_difference first_right second_right)
 difference_add_respects_equivalent
-  {first_left = Difference first_left_positive first_left_negative}
-  {first_right = Difference first_right_positive first_right_negative}
-  {second_left = Difference second_left_positive second_left_negative}
-  {second_right = Difference second_right_positive second_right_negative}
+  {first_left = Difference _ _}
+  {first_right = Difference _ _}
+  {second_left = Difference _ _}
+  {second_right = Difference _ _}
   first_equal
   second_equal =
-    the
-      (((first_left_positive + second_left_positive) +
-        (first_right_negative + second_right_negative)) =
-       ((first_right_positive + second_right_positive) +
-        (first_left_negative + second_left_negative)))
-      (rewrite sym
-        (plus_shuffle
-          first_left_positive
-          second_left_positive
-          first_right_negative
-          second_right_negative) in
-       rewrite sym
-        (plus_shuffle
-          first_right_positive
-          second_right_positive
-          first_left_negative
-          second_left_negative) in
-       cong2 (+) first_equal second_equal)
+    cross_sum_add_equivalent first_equal second_equal
