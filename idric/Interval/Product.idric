@@ -1,0 +1,216 @@
+module Interval.Product
+
+import Interval.Exact
+
+%unbound_implicits off
+
+-- This module implements exact multiplication for finite, nonempty spans.
+-- Empty products are exact as well. A nonempty unbounded input returns Nothing
+-- rather than pretending that all infinity/sign cases have already been solved.
+
+public export
+multiply_rational : ExactRational → ExactRational → ExactRational
+multiply_rational (Ratio left_numerator left_denominator)
+                  (Ratio right_numerator right_denominator) =
+  Ratio
+    (left_numerator × right_numerator)
+    (multiply_denominators left_denominator right_denominator)
+
+public export
+record FiniteSpan where
+  constructor BoundedSpan
+  lower_value : ExactRational
+  lower_kind : endpoint_membership
+  upper_value : ExactRational
+  upper_kind : endpoint_membership
+
+finite_span : exact_interval → Maybe FiniteSpan
+finite_span
+  (points_between
+    (Span
+      (lower_at lower_value lower_kind)
+      (upper_at upper_value upper_kind)
+      _)) =
+        Just
+          (BoundedSpan
+            lower_value
+            lower_kind
+            upper_value
+            upper_kind)
+finite_span _ = Nothing
+
+record ProductCandidate where
+  constructor Candidate
+  candidate_value : ExactRational
+  endpoint_attained : Bool
+
+endpoint_product :
+  ExactRational →
+  endpoint_membership →
+  ExactRational →
+  endpoint_membership →
+  ProductCandidate
+endpoint_product left_value left_kind right_value right_kind =
+  Candidate
+    (multiply_rational left_value right_value)
+    (is_included left_kind && is_included right_kind)
+
+minimum_candidate : ProductCandidate → ProductCandidate → ProductCandidate
+minimum_candidate
+  (Candidate left_value left_attained)
+  (Candidate right_value right_attained) =
+    if rational_less left_value right_value
+      then Candidate left_value left_attained
+      else if rational_less right_value left_value
+        then Candidate right_value right_attained
+        else Candidate left_value (left_attained || right_attained)
+
+maximum_candidate : ProductCandidate → ProductCandidate → ProductCandidate
+maximum_candidate
+  (Candidate left_value left_attained)
+  (Candidate right_value right_attained) =
+    if rational_less left_value right_value
+      then Candidate right_value right_attained
+      else if rational_less right_value left_value
+        then Candidate left_value left_attained
+        else Candidate left_value (left_attained || right_attained)
+
+minimum_four :
+  ProductCandidate →
+  ProductCandidate →
+  ProductCandidate →
+  ProductCandidate →
+  ProductCandidate
+minimum_four first second third fourth =
+  minimum_candidate
+    (minimum_candidate first second)
+    (minimum_candidate third fourth)
+
+maximum_four :
+  ProductCandidate →
+  ProductCandidate →
+  ProductCandidate →
+  ProductCandidate →
+  ProductCandidate
+maximum_four first second third fourth =
+  maximum_candidate
+    (maximum_candidate first second)
+    (maximum_candidate third fourth)
+
+finite_span_contains_zero : FiniteSpan → Bool
+finite_span_contains_zero
+  (BoundedSpan lower_value lower_kind upper_value upper_kind) =
+    lower_allows
+      (lower_at lower_value lower_kind)
+      (whole 0) &&
+    upper_allows
+      (upper_at upper_value upper_kind)
+      (whole 0)
+
+membership_from_attainment : Bool → endpoint_membership
+membership_from_attainment True = included
+membership_from_attainment False = excluded
+
+product_boundary_membership :
+  ProductCandidate →
+  Bool →
+  endpoint_membership
+product_boundary_membership (Candidate value attained) zero_attained =
+  if rational_equal value (whole 0) && zero_attained
+    then included
+    else membership_from_attainment attained
+
+multiply_finite_spans : FiniteSpan → FiniteSpan → exact_interval
+multiply_finite_spans
+  left@(BoundedSpan
+    left_lower
+    left_lower_kind
+    left_upper
+    left_upper_kind)
+  right@(BoundedSpan
+    right_lower
+    right_lower_kind
+    right_upper
+    right_upper_kind) =
+      let lower_lower =
+            endpoint_product
+              left_lower
+              left_lower_kind
+              right_lower
+              right_lower_kind
+          lower_upper =
+            endpoint_product
+              left_lower
+              left_lower_kind
+              right_upper
+              right_upper_kind
+          upper_lower =
+            endpoint_product
+              left_upper
+              left_upper_kind
+              right_lower
+              right_lower_kind
+          upper_upper =
+            endpoint_product
+              left_upper
+              left_upper_kind
+              right_upper
+              right_upper_kind
+          product_lower =
+            minimum_four
+              lower_lower
+              lower_upper
+              upper_lower
+              upper_upper
+          product_upper =
+            maximum_four
+              lower_lower
+              lower_upper
+              upper_lower
+              upper_upper
+          zero_attained =
+            finite_span_contains_zero left ||
+            finite_span_contains_zero right
+          lower_membership =
+            product_boundary_membership product_lower zero_attained
+          upper_membership =
+            product_boundary_membership product_upper zero_attained
+      in make_interval
+           (lower_at
+             (candidate_value product_lower)
+             lower_membership)
+           (upper_at
+             (candidate_value product_upper)
+             upper_membership)
+
+-- `Nothing` means at least one nonempty operand is unbounded. This is an
+-- explicit scope boundary, not an empty product and not an arithmetic failure.
+public export
+multiply_if_bounded :
+  exact_interval →
+  exact_interval →
+  Maybe exact_interval
+multiply_if_bounded no_points _ = Just no_points
+multiply_if_bounded _ no_points = Just no_points
+multiply_if_bounded left right =
+  case finite_span left of
+    Nothing => Nothing
+    Just left_span =>
+      case finite_span right of
+        Nothing => Nothing
+        Just right_span =>
+          Just (multiply_finite_spans left_span right_span)
+
+public export
+bounded_product_matches :
+  Maybe exact_interval →
+  exact_interval →
+  Bool
+bounded_product_matches Nothing _ = False
+bounded_product_matches (Just actual) expected =
+  interval_equal actual expected
+
+public export
+product_is_deferred : Maybe exact_interval → Bool
+product_is_deferred Nothing = True
+product_is_deferred (Just _) = False
