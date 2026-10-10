@@ -1,0 +1,153 @@
+module Interval.ClosedDifference
+
+import Interval.SignedDifference
+
+%unbound_implicits off
+
+-- A proof-oriented closed interval over structural signed differences. This is
+-- deliberately separate from the production ExactRational representation: it
+-- supplies the scalar laws needed to prove interval algorithms without axioms.
+public export
+record ClosedDifferenceInterval where
+  constructor ClosedDifferenceSpan
+  lower_difference : SignedDifference
+  upper_difference : SignedDifference
+  valid_difference_bounds :
+    DifferenceOrder lower_difference upper_difference
+
+-- Proposition-level membership records both endpoint inequalities. The source
+-- interval, member and endpoint representations remain explicit because formal
+-- differences are intentionally noncanonical.
+public export
+data ClosedDifferenceMember :
+  SignedDifference →
+  ClosedDifferenceInterval →
+  Type where
+  InsideClosedDifference :
+    (lower_value, member_value, upper_value : SignedDifference) →
+    (validity : DifferenceOrder lower_value upper_value) →
+    DifferenceOrder lower_value member_value →
+    DifferenceOrder member_value upper_value →
+    ClosedDifferenceMember
+      member_value
+      (ClosedDifferenceSpan lower_value upper_value validity)
+
+public export
+add_closed_difference_intervals :
+  ClosedDifferenceInterval →
+  ClosedDifferenceInterval →
+  ClosedDifferenceInterval
+add_closed_difference_intervals
+  (ClosedDifferenceSpan
+    left_lower
+    left_upper
+    left_validity)
+  (ClosedDifferenceSpan
+    right_lower
+    right_upper
+    right_validity) =
+      ClosedDifferenceSpan
+        (add_difference left_lower right_lower)
+        (add_difference left_upper right_upper)
+        (difference_add_order
+          left_lower
+          left_upper
+          right_lower
+          right_upper
+          left_validity
+          right_validity)
+
+public export
+closed_difference_lower_is_member :
+  (interval : ClosedDifferenceInterval) →
+  ClosedDifferenceMember
+    (lower_difference interval)
+    interval
+closed_difference_lower_is_member
+  (ClosedDifferenceSpan lower upper validity) =
+    InsideClosedDifference
+      lower
+      lower
+      upper
+      validity
+      (difference_order_reflexive lower)
+      validity
+
+public export
+closed_difference_upper_is_member :
+  (interval : ClosedDifferenceInterval) →
+  ClosedDifferenceMember
+    (upper_difference interval)
+    interval
+closed_difference_upper_is_member
+  (ClosedDifferenceSpan lower upper validity) =
+    InsideClosedDifference
+      lower
+      upper
+      upper
+      validity
+      validity
+      (difference_order_reflexive upper)
+
+-- Universal soundness of closed-interval endpoint addition: any two members
+-- add to a member of the interval formed by adding the two lower and two upper
+-- endpoints. This is the first general interval-enclosure theorem in the repo.
+public export
+addition_encloses_closed_members :
+  (left_interval, right_interval : ClosedDifferenceInterval) →
+  (left_member, right_member : SignedDifference) →
+  ClosedDifferenceMember left_member left_interval →
+  ClosedDifferenceMember right_member right_interval →
+  ClosedDifferenceMember
+    (add_difference left_member right_member)
+    (add_closed_difference_intervals left_interval right_interval)
+addition_encloses_closed_members
+  (ClosedDifferenceSpan
+    left_lower
+    left_upper
+    left_validity)
+  (ClosedDifferenceSpan
+    right_lower
+    right_upper
+    right_validity)
+  left_member
+  right_member
+  (InsideClosedDifference
+    _
+    _
+    _
+    _
+    left_lower_evidence
+    left_upper_evidence)
+  (InsideClosedDifference
+    _
+    _
+    _
+    _
+    right_lower_evidence
+    right_upper_evidence) =
+      InsideClosedDifference
+        (add_difference left_lower right_lower)
+        (add_difference left_member right_member)
+        (add_difference left_upper right_upper)
+        (difference_add_order
+          left_lower
+          left_upper
+          right_lower
+          right_upper
+          left_validity
+          right_validity)
+        (difference_add_order
+          left_lower
+          left_member
+          right_lower
+          right_member
+          left_lower_evidence
+          right_lower_evidence)
+        (difference_add_order
+          left_member
+          left_upper
+          right_member
+          right_upper
+          left_upper_evidence
+          right_upper_evidence)
