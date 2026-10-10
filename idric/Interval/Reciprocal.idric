@@ -1,0 +1,143 @@
+module Interval.Reciprocal
+
+import Interval.Exact
+
+%unbound_implicits off
+
+-- The reciprocal of one connected interval can be empty, connected, or a
+-- union of two rays when the input crosses zero. Keeping this result shape
+-- explicit prevents division from being forced into one connected interval.
+public export
+choice reciprocal_result one_of
+  reciprocal_empty
+  reciprocal_connected exact_interval
+  reciprocal_split exact_interval exact_interval
+  reciprocal_unbounded_deferred
+
+-- These helpers are public because downstream checked propositions must be
+-- able to reduce `reciprocal_interval` through the exact representation steps.
+public export
+magnitude_as_number : ±Number → Number
+magnitude_as_number value = cast (abs value)
+
+-- This helper is called only after the interval sign classification has shown
+-- that the endpoint is nonzero. The zero branch keeps the representation total;
+-- it is not used by reciprocal_interval.
+public export
+positive_denominator_from_nonzero : ±Number → PositiveDenominator
+positive_denominator_from_nonzero value =
+  case magnitude_as_number value of
+    Z => OnePlus 0
+    S remainder => OnePlus remainder
+
+public export
+reciprocal_assuming_nonzero : ExactRational → ExactRational
+reciprocal_assuming_nonzero (Ratio numerator denominator) =
+  let reciprocal_numerator =
+        if numerator < 0
+          then -(denominator_value denominator)
+          else denominator_value denominator
+  in Ratio
+       reciprocal_numerator
+       (positive_denominator_from_nonzero numerator)
+
+public export
+reciprocal_rational : ExactRational → Maybe ExactRational
+reciprocal_rational value =
+  if rational_equal value (whole 0)
+    then Nothing
+    else Just (reciprocal_assuming_nonzero value)
+
+public export
+reciprocal_same_sign :
+  ExactRational →
+  endpoint_membership →
+  ExactRational →
+  endpoint_membership →
+  reciprocal_result
+reciprocal_same_sign lower lower_kind upper upper_kind =
+  reciprocal_connected
+    (make_interval
+      (lower_at (reciprocal_assuming_nonzero upper) upper_kind)
+      (upper_at (reciprocal_assuming_nonzero lower) lower_kind))
+
+public export
+reciprocal_positive_ray :
+  ExactRational →
+  endpoint_membership →
+  reciprocal_result
+reciprocal_positive_ray upper upper_kind =
+  reciprocal_connected
+    (make_interval
+      (lower_at (reciprocal_assuming_nonzero upper) upper_kind)
+      unbounded_above)
+
+public export
+reciprocal_negative_ray :
+  ExactRational →
+  endpoint_membership →
+  reciprocal_result
+reciprocal_negative_ray lower lower_kind =
+  reciprocal_connected
+    (make_interval
+      unbounded_below
+      (upper_at (reciprocal_assuming_nonzero lower) lower_kind))
+
+public export
+reciprocal_two_rays :
+  ExactRational →
+  endpoint_membership →
+  ExactRational →
+  endpoint_membership →
+  reciprocal_result
+reciprocal_two_rays lower lower_kind upper upper_kind =
+  reciprocal_split
+    (make_interval
+      unbounded_below
+      (upper_at (reciprocal_assuming_nonzero lower) lower_kind))
+    (make_interval
+      (lower_at (reciprocal_assuming_nonzero upper) upper_kind)
+      unbounded_above)
+
+public export
+reciprocal_interval : exact_interval → reciprocal_result
+reciprocal_interval no_points = reciprocal_empty
+reciprocal_interval
+  (points_between
+    (Span
+      (lower_at lower lower_kind)
+      (upper_at upper upper_kind)
+      _)) =
+    let zero = whole 0
+    in if rational_less upper zero
+         then reciprocal_same_sign lower lower_kind upper upper_kind
+         else if rational_less zero lower
+           then reciprocal_same_sign lower lower_kind upper upper_kind
+           else if rational_equal lower zero
+             then if rational_equal upper zero
+               then reciprocal_empty
+               else reciprocal_positive_ray upper upper_kind
+             else if rational_equal upper zero
+               then reciprocal_negative_ray lower lower_kind
+               else reciprocal_two_rays
+                      lower
+                      lower_kind
+                      upper
+                      upper_kind
+reciprocal_interval _ = reciprocal_unbounded_deferred
+
+public export
+same_reciprocal_result : reciprocal_result → reciprocal_result → Bool
+same_reciprocal_result reciprocal_empty reciprocal_empty = True
+same_reciprocal_result
+  (reciprocal_connected left)
+  (reciprocal_connected right) = interval_equal left right
+same_reciprocal_result
+  (reciprocal_split left_negative left_positive)
+  (reciprocal_split right_negative right_positive) =
+    interval_equal left_negative right_negative &&
+    interval_equal left_positive right_positive
+same_reciprocal_result
+  reciprocal_unbounded_deferred
+  reciprocal_unbounded_deferred = True
+same_reciprocal_result _ _ = False
