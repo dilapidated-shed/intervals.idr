@@ -2,7 +2,13 @@ module Interval.Exact
 
 %unbound_implicits off
 
--- Exact ordered scalar.  A denominator is positive BY CONSTRUCTION.
+-- Signed whole numbers keep an Idriç-facing mathematical name. Integer is
+-- only the inherited bootstrap representation at this compiler boundary.
+public export
+±Number : Type
+±Number = Integer
+
+-- Exact ordered scalar. A denominator is positive by construction.
 -- No binary-float conversion or unproved rounding occurs in this module.
 public export
 data PositiveDenominator = OnePlus Number
@@ -22,7 +28,7 @@ public export
 whole : ±Number → ExactRational
 whole numerator = Ratio numerator (OnePlus 0)
 
--- 'over 1 (OnePlus 3)' denotes 1/4. The successor avoids zero denominators.
+-- `over 1 (OnePlus 3)` denotes 1/4. The successor avoids zero denominators.
 public export
 over : ±Number → PositiveDenominator → ExactRational
 over = Ratio
@@ -81,11 +87,10 @@ choice upper_bound one_of
   upper_at ExactRational endpoint_membership
   unbounded_above
 
--- Construct ordinary intervals via 'make_interval' or the convenience functions.
--- For this initial Idriç slice raw choice alternatives remain visible. Users of the
--- public API should not construct points_between directly: that would bypass
--- validation of reversed/open-singleton bounds. Proof-carrying constructors
--- remain a separate elaboration question for the Idriç integration.
+-- Construct ordinary intervals via `make_interval` or the convenience functions.
+-- Raw choice alternatives remain visible in this first Idriç slice. A caller
+-- can bypass validation by constructing `points_between` directly; a later
+-- proof-indexed interface must close that gap.
 public export
 choice exact_interval one_of
   no_points
@@ -227,23 +232,22 @@ negate_interval (points_between lo hi) =
   make_interval (lower_of_negated_upper hi) (upper_of_negated_lower lo)
 
 -- Ordinary interval subtraction loses repeated-expression correlation.
--- x:[0,1] and x-x evaluates to [-1,1] HERE, not the symbolic singleton 0.
+-- `x:[0,1]` and `x−x` evaluate to `[-1,1]` here, not the singleton zero.
 public export
 subtract_interval : exact_interval → exact_interval → exact_interval
 subtract_interval a b = add_interval a (negate_interval b)
 
--- Intersection of sets, including coincident open/closed_interval endpoints.
--- This is restriction by known bounds, NOT statistical conditioning.
+-- Intersection is restriction by known set bounds, not statistical conditioning.
 public export
 stronger_lower : lower_bound → lower_bound → lower_bound
 stronger_lower unbounded_below b = b
 stronger_lower a unbounded_below = a
 stronger_lower (lower_at a ai) (lower_at b bi) =
   if rational_less a b
-     then lower_at b bi
-     else if rational_less b a
-       then lower_at a ai
-       else lower_at a (both_included ai bi)
+    then lower_at b bi
+    else if rational_less b a
+      then lower_at a ai
+      else lower_at a (both_included ai bi)
 
 public export
 stronger_upper : upper_bound → upper_bound → upper_bound
@@ -251,10 +255,10 @@ stronger_upper unbounded_above b = b
 stronger_upper a unbounded_above = a
 stronger_upper (upper_at a ai) (upper_at b bi) =
   if rational_less a b
-     then upper_at a ai
-     else if rational_less b a
-       then upper_at b bi
-       else upper_at a (both_included ai bi)
+    then upper_at a ai
+    else if rational_less b a
+      then upper_at b bi
+      else upper_at a (both_included ai bi)
 
 public export
 intersect_interval : exact_interval → exact_interval → exact_interval
