@@ -1,0 +1,88 @@
+module Interval.Membership
+
+import Data.So
+import Interval.Exact
+
+%unbound_implicits off
+
+-- Proposition-level membership. A witness records both endpoint checks and is
+-- indexed by the exact interval value whose membership it establishes.
+public export
+data IntervalMember : ExactRational → exact_interval → Type where
+  InsideSpan :
+    {value : ExactRational} →
+    {lower : lower_bound} →
+    {upper : upper_bound} →
+    {validity : ValidBounds lower upper} →
+    So (lower_allows lower value) →
+    So (upper_allows upper value) →
+    IntervalMember value (points_between (Span lower upper validity))
+
+-- Every proposition-level membership witness certifies the executable Boolean
+-- predicate used by ordinary callers.
+public export
+member_implies_contains :
+  {value : ExactRational} →
+  {interval : exact_interval} →
+  IntervalMember value interval →
+  So (contains interval value)
+member_implies_contains (InsideSpan lower_evidence upper_evidence) =
+  andSo (lower_evidence, upper_evidence)
+
+-- Conversely, a successful executable membership check contains enough
+-- information to construct the proposition-level witness. The empty interval
+-- case is impossible because it would require `So False`.
+public export
+contains_implies_member :
+  {value : ExactRational} →
+  {interval : exact_interval} →
+  So (contains interval value) →
+  IntervalMember value interval
+contains_implies_member {interval = no_points} evidence = absurd evidence
+contains_implies_member
+  {interval = points_between (Span lower upper validity)}
+  evidence =
+    case soAnd evidence of
+      (lower_evidence, upper_evidence) =>
+        InsideSpan lower_evidence upper_evidence
+
+public export
+empty_has_no_members :
+  {value : ExactRational} →
+  IntervalMember value no_points →
+  Void
+empty_has_no_members (InsideSpan _ _) impossible
+
+public export
+member_interval_is_not_empty :
+  {value : ExactRational} →
+  {interval : exact_interval} →
+  IntervalMember value interval →
+  interval_equal interval no_points = False
+member_interval_is_not_empty (InsideSpan _ _) = Refl
+
+public export
+membership_refutes_failed_contains :
+  {value : ExactRational} →
+  {interval : exact_interval} →
+  (So (contains interval value) → Void) →
+  IntervalMember value interval →
+  Void
+membership_refutes_failed_contains refutation membership =
+  refutation (member_implies_contains membership)
+
+-- Decidable membership is derived from the public reducible Boolean decision
+-- in Interval.Exact. Using `decide_truth` keeps concrete decisions reducible
+-- across the module boundary while preserving one semantic predicate.
+public export
+decide_member :
+  (value : ExactRational) →
+  (interval : exact_interval) →
+  Dec (IntervalMember value interval)
+decide_member value interval =
+  case decide_truth (contains interval value) of
+    Left evidence => Yes (contains_implies_member evidence)
+    Right refutation_evidence =>
+      No
+        (membership_refutes_failed_contains
+          (soNotToNotSo refutation_evidence))

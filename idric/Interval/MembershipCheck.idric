@@ -1,0 +1,78 @@
+module Interval.MembershipCheck
+
+import Data.So
+import Interval.Exact
+import Interval.Membership
+
+%unbound_implicits off
+
+public export
+decision_is_yes : {proposition : Type} → Dec proposition → Bool
+decision_is_yes (Yes _) = True
+decision_is_yes (No _) = False
+
+closed_middle_member :
+  IntervalMember
+    (whole 2)
+    (closed_interval (whole 1) (whole 3))
+closed_middle_member = contains_implies_member Oh
+
+closed_lower_member_evidence :
+  IntervalMember
+    (whole 1)
+    (closed_interval (whole 1) (whole 3))
+closed_lower_member_evidence = contains_implies_member Oh
+
+unbounded_member_evidence :
+  IntervalMember
+    (whole (-100))
+    (below (whole 4) excluded)
+unbounded_member_evidence = contains_implies_member Oh
+
+-- The proposition-level witness maps back to the same executable predicate.
+closed_member_matches_boolean :
+  contains
+    (closed_interval (whole 1) (whole 3))
+    (whole 2) = True
+closed_member_matches_boolean =
+  soToEq (member_implies_contains closed_middle_member)
+
+member_witness_excludes_empty_interval :
+  interval_equal
+    (closed_interval (whole 1) (whole 3))
+    no_points = False
+member_witness_excludes_empty_interval =
+  member_interval_is_not_empty closed_middle_member
+
+closed_member_decision :
+  decision_is_yes
+    (decide_member
+      (whole 2)
+      (closed_interval (whole 1) (whole 3))) = True
+closed_member_decision = Refl
+
+open_endpoint_is_not_member :
+  decision_is_yes
+    (decide_member
+      (whole 1)
+      (left_open_interval (whole 1) (whole 3))) = False
+open_endpoint_is_not_member = Refl
+
+outside_closed_interval_is_not_member :
+  decision_is_yes
+    (decide_member
+      (whole 4)
+      (closed_interval (whole 1) (whole 3))) = False
+outside_closed_interval_is_not_member = Refl
+
+empty_interval_has_negative_decision :
+  decision_is_yes
+    (decide_member (whole 0) no_points) = False
+empty_interval_has_negative_decision = Refl
+
+unbounded_member_decision :
+  decision_is_yes
+    (decide_member
+      (whole (-100))
+      (below (whole 4) excluded)) = True
+unbounded_member_decision = Refl
