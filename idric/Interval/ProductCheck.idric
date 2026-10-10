@@ -77,6 +77,23 @@ empty_times_unbounded_is_empty :
     no_points = True
 empty_times_unbounded_is_empty = Refl
 
+-- Empty is absorbing for every interval, including unsupported unbounded
+-- nonempty cases. These are general reductions, not selected numeric examples.
+empty_product_left :
+  (interval : exact_interval) →
+  bounded_product_matches
+    (multiply_if_bounded no_points interval)
+    no_points = True
+empty_product_left interval = Refl
+
+empty_product_right :
+  (interval : exact_interval) →
+  bounded_product_matches
+    (multiply_if_bounded interval no_points)
+    no_points = True
+empty_product_right no_points = Refl
+empty_product_right (points_between span) = Refl
+
 nonempty_unbounded_product_is_deferred :
   product_is_deferred
     (multiply_if_bounded
