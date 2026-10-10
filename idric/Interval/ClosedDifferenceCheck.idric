@@ -1,0 +1,103 @@
+module Interval.ClosedDifferenceCheck
+
+import Data.So
+import Interval.ClosedDifference
+import Interval.SignedDifference
+
+%unbound_implicits off
+
+minus_three : SignedDifference
+minus_three = negative_difference 3
+
+minus_one : SignedDifference
+minus_one = negative_difference 1
+
+one : SignedDifference
+one = positive_difference 1
+
+two : SignedDifference
+two = positive_difference 2
+
+four : SignedDifference
+four = positive_difference 4
+
+five : SignedDifference
+five = positive_difference 5
+
+first_interval : ClosedDifferenceInterval
+first_interval =
+  ClosedDifferenceSpan
+    minus_three
+    one
+    (difference_order_evidence minus_three one Oh)
+
+second_interval : ClosedDifferenceInterval
+second_interval =
+  ClosedDifferenceSpan
+    two
+    five
+    (difference_order_evidence two five Oh)
+
+minus_one_is_in_first :
+  ClosedDifferenceMember minus_one first_interval
+minus_one_is_in_first =
+  InsideClosedDifference
+    minus_three
+    minus_one
+    one
+    (difference_order_evidence minus_three one Oh)
+    (difference_order_evidence minus_three minus_one Oh)
+    (difference_order_evidence minus_one one Oh)
+
+four_is_in_second :
+  ClosedDifferenceMember four second_interval
+four_is_in_second =
+  InsideClosedDifference
+    two
+    four
+    five
+    (difference_order_evidence two five Oh)
+    (difference_order_evidence two four Oh)
+    (difference_order_evidence four five Oh)
+
+example_sum_is_enclosed :
+  ClosedDifferenceMember
+    (add_difference minus_one four)
+    (add_closed_difference_intervals first_interval second_interval)
+example_sum_is_enclosed =
+  addition_encloses_closed_members
+    first_interval
+    second_interval
+    minus_one
+    four
+    minus_one_is_in_first
+    four_is_in_second
+
+sum_lower_endpoint_is_member :
+  ClosedDifferenceMember
+    (lower_difference
+      (add_closed_difference_intervals first_interval second_interval))
+    (add_closed_difference_intervals first_interval second_interval)
+sum_lower_endpoint_is_member =
+  closed_difference_lower_is_member
+    (add_closed_difference_intervals first_interval second_interval)
+
+sum_upper_endpoint_is_member :
+  ClosedDifferenceMember
+    (upper_difference
+      (add_closed_difference_intervals first_interval second_interval))
+    (add_closed_difference_intervals first_interval second_interval)
+sum_upper_endpoint_is_member =
+  closed_difference_upper_is_member
+    (add_closed_difference_intervals first_interval second_interval)
+
+-- The theorem remains open in both intervals and both member values.
+addition_enclosure_open :
+  (left_interval, right_interval : ClosedDifferenceInterval) →
+  (left_member, right_member : SignedDifference) →
+  ClosedDifferenceMember left_member left_interval →
+  ClosedDifferenceMember right_member right_interval →
+  ClosedDifferenceMember
+    (add_difference left_member right_member)
+    (add_closed_difference_intervals left_interval right_interval)
+addition_enclosure_open = addition_encloses_closed_members
