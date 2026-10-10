@@ -1,0 +1,66 @@
+module Interval.Relation
+
+import Interval.Exact
+
+%unbound_implicits off
+
+-- A relation between two complete interval values. Empty inputs remain visible
+-- instead of being folded into an arbitrary ordering result.
+public export
+choice interval_relation one_of
+  both_have_no_points
+  left_has_no_points
+  right_has_no_points
+  left_strictly_before_right
+  right_strictly_before_left
+  ranges_overlap
+
+-- Every value admitted by the left upper bound is strictly below every value
+-- admitted by the right lower bound. Equal numeric boundaries are separated
+-- exactly when at least one side excludes the shared boundary value.
+public export
+upper_strictly_before_lower : upper_bound → lower_bound → Bool
+upper_strictly_before_lower unbounded_above _ = False
+upper_strictly_before_lower _ unbounded_below = False
+upper_strictly_before_lower
+  (upper_at left_limit left_kind)
+  (lower_at right_limit right_kind) =
+    if rational_less left_limit right_limit
+      then True
+      else if rational_equal left_limit right_limit
+        then not (is_included left_kind && is_included right_kind)
+        else False
+
+public export
+strictly_before : exact_interval → exact_interval → Bool
+strictly_before no_points _ = False
+strictly_before _ no_points = False
+strictly_before
+  (points_between (Span _ left_upper _))
+  (points_between (Span right_lower _ _)) =
+    upper_strictly_before_lower left_upper right_lower
+
+-- Valid nonempty intervals on a line either overlap or one is entirely before
+-- the other. This function exposes that result as a typed choice rather than a
+-- single Bool whose false case would hide the reason.
+public export
+compare_intervals : exact_interval → exact_interval → interval_relation
+compare_intervals no_points no_points = both_have_no_points
+compare_intervals no_points _ = left_has_no_points
+compare_intervals _ no_points = right_has_no_points
+compare_intervals left right =
+  if strictly_before left right
+    then left_strictly_before_right
+    else if strictly_before right left
+      then right_strictly_before_left
+      else ranges_overlap
+
+public export
+same_relation : interval_relation → interval_relation → Bool
+same_relation both_have_no_points both_have_no_points = True
+same_relation left_has_no_points left_has_no_points = True
+same_relation right_has_no_points right_has_no_points = True
+same_relation left_strictly_before_right left_strictly_before_right = True
+same_relation right_strictly_before_left right_strictly_before_left = True
+same_relation ranges_overlap ranges_overlap = True
+same_relation _ _ = False

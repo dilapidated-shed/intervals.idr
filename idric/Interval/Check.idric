@@ -2,6 +2,7 @@ module Interval.Check
 
 import Data.So
 import Interval.Exact
+import Interval.Relation
 
 %unbound_implicits off
 
@@ -117,6 +118,92 @@ direct_closed_singleton :
         (EqualClosed Oh)))
     (closed_interval (whole 2) (whole 2)) = True
 direct_closed_singleton = Refl
+
+-- Typed relation checks. A numerical gap is strictly ordered.
+closed_gap_relation :
+  same_relation
+    (compare_intervals
+      (closed_interval (whole 0) (whole 1))
+      (closed_interval (whole 2) (whole 3)))
+    left_strictly_before_right = True
+closed_gap_relation = Refl
+
+reverse_gap_relation :
+  same_relation
+    (compare_intervals
+      (closed_interval (whole 2) (whole 3))
+      (closed_interval (whole 0) (whole 1)))
+    right_strictly_before_left = True
+reverse_gap_relation = Refl
+
+-- A shared included endpoint is an actual common point.
+closed_touching_relation :
+  same_relation
+    (compare_intervals
+      (closed_interval (whole 0) (whole 1))
+      (closed_interval (whole 1) (whole 2)))
+    ranges_overlap = True
+closed_touching_relation = Refl
+
+-- Excluding the shared boundary on either side makes every left value strictly
+-- smaller than every right value.
+right_open_touching_relation :
+  same_relation
+    (compare_intervals
+      (right_open_interval (whole 0) (whole 1))
+      (closed_interval (whole 1) (whole 2)))
+    left_strictly_before_right = True
+right_open_touching_relation = Refl
+
+left_open_touching_relation :
+  same_relation
+    (compare_intervals
+      (closed_interval (whole 0) (whole 1))
+      (left_open_interval (whole 1) (whole 2)))
+    left_strictly_before_right = True
+left_open_touching_relation = Refl
+
+interior_overlap_relation :
+  same_relation
+    (compare_intervals
+      (closed_interval (whole 0) (whole 2))
+      (closed_interval (whole 1) (whole 3)))
+    ranges_overlap = True
+interior_overlap_relation = Refl
+
+open_unbounded_gap_relation :
+  same_relation
+    (compare_intervals
+      (below (whole 0) excluded)
+      (above (whole 0) excluded))
+    left_strictly_before_right = True
+open_unbounded_gap_relation = Refl
+
+closed_unbounded_touch_relation :
+  same_relation
+    (compare_intervals
+      (below (whole 0) included)
+      (above (whole 0) included))
+    ranges_overlap = True
+closed_unbounded_touch_relation = Refl
+
+both_empty_relation :
+  same_relation
+    (compare_intervals no_points no_points)
+    both_have_no_points = True
+both_empty_relation = Refl
+
+left_empty_relation :
+  same_relation
+    (compare_intervals no_points (closed_interval (whole 0) (whole 1)))
+    left_has_no_points = True
+left_empty_relation = Refl
+
+right_empty_relation :
+  same_relation
+    (compare_intervals (closed_interval (whole 0) (whole 1)) no_points)
+    right_has_no_points = True
+right_empty_relation = Refl
 
 main : IO ()
 main = putStrLn "Idriç exact rational interval checks: PASS"
