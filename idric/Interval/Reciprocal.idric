@@ -14,23 +14,23 @@ choice reciprocal_result one_of
   reciprocal_split exact_interval exact_interval
   reciprocal_unbounded_deferred
 
--- These helpers are exported because downstream checked propositions must be
+-- These helpers are public because downstream checked propositions must be
 -- able to reduce `reciprocal_interval` through the exact representation steps.
-export
+public export
 magnitude_as_number : ±Number → Number
 magnitude_as_number value = cast (abs value)
 
 -- This helper is called only after the interval sign classification has shown
 -- that the endpoint is nonzero. The zero branch keeps the representation total;
 -- it is not used by reciprocal_interval.
-export
+public export
 positive_denominator_from_nonzero : ±Number → PositiveDenominator
 positive_denominator_from_nonzero value =
   case magnitude_as_number value of
     Z => OnePlus 0
     S remainder => OnePlus remainder
 
-export
+public export
 reciprocal_assuming_nonzero : ExactRational → ExactRational
 reciprocal_assuming_nonzero (Ratio numerator denominator) =
   let reciprocal_numerator =
@@ -48,7 +48,7 @@ reciprocal_rational value =
     then Nothing
     else Just (reciprocal_assuming_nonzero value)
 
-export
+public export
 reciprocal_same_sign :
   ExactRational →
   endpoint_membership →
@@ -61,7 +61,7 @@ reciprocal_same_sign lower lower_kind upper upper_kind =
       (lower_at (reciprocal_assuming_nonzero upper) upper_kind)
       (upper_at (reciprocal_assuming_nonzero lower) lower_kind))
 
-export
+public export
 reciprocal_positive_ray :
   ExactRational →
   endpoint_membership →
@@ -72,7 +72,7 @@ reciprocal_positive_ray upper upper_kind =
       (lower_at (reciprocal_assuming_nonzero upper) upper_kind)
       unbounded_above)
 
-export
+public export
 reciprocal_negative_ray :
   ExactRational →
   endpoint_membership →
@@ -83,7 +83,7 @@ reciprocal_negative_ray lower lower_kind =
       unbounded_below
       (upper_at (reciprocal_assuming_nonzero lower) lower_kind))
 
-export
+public export
 reciprocal_two_rays :
   ExactRational →
   endpoint_membership →
