@@ -1,0 +1,190 @@
+module Interval.SignedDifferenceCheck
+
+import Data.So
+import Interval.NaturalProofs
+import Interval.SignedDifference
+
+%unbound_implicits off
+
+minus_three_before_minus_one :
+  DifferenceOrder
+    (negative_difference 3)
+    (negative_difference 1)
+minus_three_before_minus_one =
+  difference_order_evidence
+    (negative_difference 3)
+    (negative_difference 1)
+    Oh
+
+one_before_three :
+  DifferenceOrder
+    (positive_difference 1)
+    (positive_difference 3)
+one_before_three =
+  difference_order_evidence
+    (positive_difference 1)
+    (positive_difference 3)
+    Oh
+
+two_before_four :
+  DifferenceOrder
+    (positive_difference 2)
+    (positive_difference 4)
+two_before_four =
+  difference_order_evidence
+    (positive_difference 2)
+    (positive_difference 4)
+    Oh
+
+-- (-3) + 2 ≤ (-1) + 4 follows from the general monotonicity theorem.
+monotone_sum_evidence :
+  DifferenceOrder
+    (add_difference (negative_difference 3) (positive_difference 2))
+    (add_difference (negative_difference 1) (positive_difference 4))
+monotone_sum_evidence =
+  difference_add_order
+    (negative_difference 3)
+    (negative_difference 1)
+    (positive_difference 2)
+    (positive_difference 4)
+    minus_three_before_minus_one
+    two_before_four
+
+monotone_sum_boolean :
+  difference_order
+    (add_difference (negative_difference 3) (positive_difference 2))
+    (add_difference (negative_difference 1) (positive_difference 4)) = True
+monotone_sum_boolean =
+  truth_to_equality
+    (difference_order_boolean
+      (add_difference (negative_difference 3) (positive_difference 2))
+      (add_difference (negative_difference 1) (positive_difference 4))
+      monotone_sum_evidence)
+
+-- The monotonicity proof is genuinely open in all four signed values; it is
+-- not merely the closed arithmetic example above.
+addition_monotone_open :
+  {first_left, first_right : SignedDifference} →
+  {second_left, second_right : SignedDifference} →
+  DifferenceOrder first_left first_right →
+  DifferenceOrder second_left second_right →
+  DifferenceOrder
+    (add_difference first_left second_left)
+    (add_difference first_right second_right)
+addition_monotone_open
+  {first_left}
+  {first_right}
+  {second_left}
+  {second_right}
+  first_order
+  second_order =
+    difference_add_order
+      first_left
+      first_right
+      second_left
+      second_right
+      first_order
+      second_order
+
+-- Negating -3 ≤ -1 gives 1 ≤ 3.
+negation_reverses_order :
+  DifferenceOrder
+    (negate_difference (negative_difference 1))
+    (negate_difference (negative_difference 3))
+negation_reverses_order =
+  difference_negate_reverses_order
+    (negative_difference 3)
+    (negative_difference 1)
+    minus_three_before_minus_one
+
+scale_preserves_order :
+  DifferenceOrder
+    (scale_difference 7 (positive_difference 1))
+    (scale_difference 7 (positive_difference 3))
+scale_preserves_order =
+  difference_scale_order
+    7
+    (positive_difference 1)
+    (positive_difference 3)
+    one_before_three
+
+scale_preserves_order_boolean :
+  difference_order
+    (scale_difference 7 (positive_difference 1))
+    (scale_difference 7 (positive_difference 3)) = True
+scale_preserves_order_boolean =
+  truth_to_equality
+    (difference_order_boolean
+      (scale_difference 7 (positive_difference 1))
+      (scale_difference 7 (positive_difference 3))
+      scale_preserves_order)
+
+-- `3 − 2` and `1 − 0` are intentionally distinct representations of the same
+-- signed integer. Semantic equality is cross-sum equality, not pair identity.
+noncanonical_one :
+  DifferenceEquivalent
+    (Difference 3 2)
+    (Difference 1 0)
+noncanonical_one = Refl
+
+noncanonical_order_antisymmetry :
+  DifferenceEquivalent
+    (Difference 3 2)
+    (Difference 1 0)
+noncanonical_order_antisymmetry =
+  difference_order_antisymmetric
+    (Difference 3 2)
+    (Difference 1 0)
+    (difference_order_evidence
+      (Difference 3 2)
+      (Difference 1 0)
+      Oh)
+    (difference_order_evidence
+      (Difference 1 0)
+      (Difference 3 2)
+      Oh)
+
+addition_respects_noncanonical_values :
+  DifferenceEquivalent
+    (add_difference (Difference 3 2) (Difference 5 4))
+    (add_difference (Difference 1 0) (Difference 1 0))
+addition_respects_noncanonical_values =
+  difference_add_respects_equivalent
+    (Difference 3 2)
+    (Difference 1 0)
+    (Difference 5 4)
+    (Difference 1 0)
+    noncanonical_one
+    (the
+      (DifferenceEquivalent (Difference 5 4) (Difference 1 0))
+      Refl)
+
+-- (3−2)(0−2) = 4−6 = -2.
+exact_signed_product :
+  DifferenceEquivalent
+    (multiply_difference (Difference 3 2) (Difference 0 2))
+    (negative_difference 2)
+exact_signed_product = Refl
+
+reflexive_open_value :
+  (value : SignedDifference) → DifferenceOrder value value
+reflexive_open_value = difference_order_reflexive
+
+public export
+decision_is_yes : {statement : Type} → Dec statement → Bool
+decision_is_yes (Yes _) = True
+decision_is_yes (No _) = False
+
+decidable_order_accepts_true_case :
+  decision_is_yes
+    (decide_difference_order
+      (negative_difference 3)
+      (negative_difference 1)) = True
+decidable_order_accepts_true_case = Refl
+
+decidable_order_rejects_reverse_case :
+  decision_is_yes
+    (decide_difference_order
+      (positive_difference 3)
+      (positive_difference 1)) = False
+decidable_order_rejects_reverse_case = Refl

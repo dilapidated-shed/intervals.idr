@@ -1,0 +1,223 @@
+module Interval.SignedDifference
+
+import Data.So
+import Interval.NaturalProofs
+
+%unbound_implicits off
+
+-- `Difference positive negative` represents the exact signed value
+-- `positive − negative`. The representation is deliberately not normalized:
+-- several pairs may denote the same integer, which keeps addition and its order
+-- proofs structural instead of depending on primitive machine-integer laws.
+public export
+data SignedDifference = Difference Number Number
+
+public export
+difference_zero : SignedDifference
+difference_zero = Difference 0 0
+
+public export
+positive_difference : Number → SignedDifference
+positive_difference value = Difference value 0
+
+public export
+negative_difference : Number → SignedDifference
+negative_difference value = Difference 0 value
+
+public export
+add_difference : SignedDifference → SignedDifference → SignedDifference
+add_difference
+  (Difference left_positive left_negative)
+  (Difference right_positive right_negative) =
+    Difference
+      (left_positive + right_positive)
+      (left_negative + right_negative)
+
+public export
+negate_difference : SignedDifference → SignedDifference
+negate_difference (Difference positive negative) = Difference negative positive
+
+public export
+subtract_difference : SignedDifference → SignedDifference → SignedDifference
+subtract_difference left right =
+  add_difference left (negate_difference right)
+
+-- Scaling is repeated addition. This makes its order proof structural rather
+-- than dependent on a separate multiplication-distribution theorem.
+public export
+scale_difference : Number → SignedDifference → SignedDifference
+scale_difference Z value = difference_zero
+scale_difference (S factor) value =
+  add_difference value (scale_difference factor value)
+
+-- `(p − n)(q − m) = (pq + nm) − (pm + nq)`.
+public export
+multiply_difference : SignedDifference → SignedDifference → SignedDifference
+multiply_difference
+  (Difference left_positive left_negative)
+  (Difference right_positive right_negative) =
+    Difference
+      (left_positive × right_positive + left_negative × right_negative)
+      (left_positive × right_negative + left_negative × right_positive)
+
+-- Cross-sum equality is the semantic equality of formal differences:
+-- `p − n = q − m` exactly when `p + m = q + n`.
+public export
+DifferenceEquivalent : SignedDifference → SignedDifference → Type
+DifferenceEquivalent
+  (Difference left_positive left_negative)
+  (Difference right_positive right_negative) =
+    left_positive + right_negative = right_positive + left_negative
+
+-- The same cross-sum construction supplies a proof-level order.
+public export
+DifferenceOrder : SignedDifference → SignedDifference → Type
+DifferenceOrder
+  (Difference left_positive left_negative)
+  (Difference right_positive right_negative) =
+    NaturalOrder
+      (left_positive + right_negative)
+      (right_positive + left_negative)
+
+public export
+difference_order : SignedDifference → SignedDifference → Bool
+difference_order
+  (Difference left_positive left_negative)
+  (Difference right_positive right_negative) =
+    natural_order
+      (left_positive + right_negative)
+      (right_positive + left_negative)
+
+-- The operands are explicit because the cross-sum proof type is deliberately
+-- non-injective: a proof does not identify which pair representation produced
+-- the same signed value.
+public export
+difference_order_evidence :
+  (left, right : SignedDifference) →
+  So (difference_order left right) →
+  DifferenceOrder left right
+difference_order_evidence
+  (Difference left_positive left_negative)
+  (Difference right_positive right_negative)
+  evidence =
+    natural_order_from_true
+      (left_positive + right_negative)
+      (right_positive + left_negative)
+      (truth_to_equality evidence)
+
+public export
+difference_order_boolean :
+  (left, right : SignedDifference) →
+  DifferenceOrder left right →
+  So (difference_order left right)
+difference_order_boolean
+  (Difference left_positive left_negative)
+  (Difference right_positive right_negative)
+  evidence =
+    equality_to_truth
+      (natural_order_to_true
+        (left_positive + right_negative)
+        (right_positive + left_negative)
+        evidence)
+
+public export
+decide_difference_order :
+  (left, right : SignedDifference) →
+  Dec (DifferenceOrder left right)
+decide_difference_order
+  (Difference left_positive left_negative)
+  (Difference right_positive right_negative) =
+    decide_natural_order
+      (left_positive + right_negative)
+      (right_positive + left_negative)
+
+public export
+difference_order_reflexive :
+  (value : SignedDifference) →
+  DifferenceOrder value value
+difference_order_reflexive (Difference _ _) = natural_order_reflexive _
+
+public export
+difference_order_antisymmetric :
+  (left, right : SignedDifference) →
+  DifferenceOrder left right →
+  DifferenceOrder right left →
+  DifferenceEquivalent left right
+difference_order_antisymmetric
+  (Difference _ _)
+  (Difference _ _)
+  left_to_right
+  right_to_left =
+    natural_order_antisymmetric left_to_right right_to_left
+
+-- Addition is monotone in both arguments. This is the first scalar law needed
+-- by a universal interval-addition enclosure proof.
+public export
+difference_add_order :
+  (first_left, first_right : SignedDifference) →
+  (second_left, second_right : SignedDifference) →
+  DifferenceOrder first_left first_right →
+  DifferenceOrder second_left second_right →
+  DifferenceOrder
+    (add_difference first_left second_left)
+    (add_difference first_right second_right)
+difference_add_order
+  (Difference _ _)
+  (Difference _ _)
+  (Difference _ _)
+  (Difference _ _)
+  first_order
+  second_order =
+    cross_sum_add_order first_order second_order
+
+-- Negation reverses the signed order.
+public export
+difference_negate_reverses_order :
+  (left, right : SignedDifference) →
+  DifferenceOrder left right →
+  DifferenceOrder (negate_difference right) (negate_difference left)
+difference_negate_reverses_order
+  (Difference _ _)
+  (Difference _ _)
+  ordered =
+    cross_sum_negate_order ordered
+
+-- Repeated addition by a nonnegative whole factor preserves order.
+public export
+difference_scale_order :
+  (factor : Number) →
+  (left, right : SignedDifference) →
+  DifferenceOrder left right →
+  DifferenceOrder
+    (scale_difference factor left)
+    (scale_difference factor right)
+difference_scale_order Z left right ordered =
+  difference_order_reflexive difference_zero
+difference_scale_order (S factor) left right ordered =
+  difference_add_order
+    left
+    right
+    (scale_difference factor left)
+    (scale_difference factor right)
+    ordered
+    (difference_scale_order factor left right ordered)
+
+-- Addition respects semantic equality even though the pair representation is
+-- intentionally noncanonical.
+public export
+difference_add_respects_equivalent :
+  (first_left, first_right : SignedDifference) →
+  (second_left, second_right : SignedDifference) →
+  DifferenceEquivalent first_left first_right →
+  DifferenceEquivalent second_left second_right →
+  DifferenceEquivalent
+    (add_difference first_left second_left)
+    (add_difference first_right second_right)
+difference_add_respects_equivalent
+  (Difference _ _)
+  (Difference _ _)
+  (Difference _ _)
+  (Difference _ _)
+  first_equal
+  second_equal =
+    cross_sum_add_equivalent first_equal second_equal
