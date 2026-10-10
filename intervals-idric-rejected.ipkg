@@ -1,0 +1,4 @@
+package intervals-idric-rejected
+version = 0.1.0
+sourcedir = "idric"
+modules = Interval.Exact, Interval.Rejected.ReversedSpan
