@@ -1,6 +1,6 @@
 package intervals-idric
 version = 0.1.0
 sourcedir = "idric"
-modules = Interval.Exact, Interval.Check
+modules = Interval.Exact, Interval.Relation, Interval.Check
 main = Interval.Check
 executable = "interval-idric-tests"
