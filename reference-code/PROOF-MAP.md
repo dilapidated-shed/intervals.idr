@@ -19,4 +19,4 @@ Intervals are an elementary mathematical type, comparable in programming value t
 
 Unknown unknowns, arbitrarily nested or interacting ε-like regions, unknown resolution conditions, and strategic manipulation of information are distinct research topics. They are not modeled by the reference implementations here, and this folder must not dictate their representation.
 
-The local Idris and Idriç `Refl` examples establish only particular reductions, not the universal interval theorems described above.
+The local Idriç `Refl` examples establish only particular reductions, not the universal interval theorems described above.
