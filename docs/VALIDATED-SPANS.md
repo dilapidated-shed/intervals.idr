@@ -8,7 +8,7 @@ The `prelude/proof-carrying-valid-spans` layer replaces
 points_between lower_bound upper_bound
 ```
 
-with a `ValidatedSpan`. Its erased `ValidBounds lower upper` argument proves one of the cases that can actually contain a rational number:
+with a `ValidatedSpan`. Its `ValidBounds lower upper` argument proves one of the cases that can actually contain a rational number:
 
 - the whole line;
 - one-sided unbounded intervals;
@@ -17,7 +17,7 @@ with a `ValidatedSpan`. Its erased `ValidBounds lower upper` argument proves one
 
 Reversed finite bounds and open or half-open singletons have no `ValidBounds` constructor. `make_interval` therefore returns `no_points` for them, while direct construction requires evidence rather than trusting a caller convention.
 
-The evidence is multiplicity `0`: it constrains typechecking but is absent from the runtime interval representation.
+The first checked Idriç version retains validity evidence as an ordinary field. Proof erasure is a later representation optimization; it is not needed to enforce the mathematical construction rule.
 
 ## What this establishes
 
