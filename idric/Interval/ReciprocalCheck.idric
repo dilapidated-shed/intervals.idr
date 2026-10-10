@@ -1,0 +1,137 @@
+module Interval.ReciprocalCheck
+
+import Interval.Exact
+import Interval.Reciprocal
+
+%unbound_implicits off
+
+one_half : ExactRational
+one_half = over 1 (OnePlus 1)
+
+one_third : ExactRational
+one_third = over 1 (OnePlus 2)
+
+one_fourth : ExactRational
+one_fourth = over 1 (OnePlus 3)
+
+negative_one_half : ExactRational
+negative_one_half = over (-1) (OnePlus 1)
+
+negative_one_fourth : ExactRational
+negative_one_fourth = over (-1) (OnePlus 3)
+
+positive_closed_reciprocal :
+  same_reciprocal_result
+    (reciprocal_interval
+      (closed_interval (whole 2) (whole 4)))
+    (reciprocal_connected
+      (closed_interval one_fourth one_half)) = True
+positive_closed_reciprocal = Refl
+
+-- Reciprocal reverses endpoint order and therefore swaps which side is open.
+positive_left_open_reciprocal :
+  same_reciprocal_result
+    (reciprocal_interval
+      (left_open_interval (whole 2) (whole 4)))
+    (reciprocal_connected
+      (right_open_interval one_fourth one_half)) = True
+positive_left_open_reciprocal = Refl
+
+negative_closed_reciprocal :
+  same_reciprocal_result
+    (reciprocal_interval
+      (closed_interval (whole (-4)) (whole (-2))))
+    (reciprocal_connected
+      (closed_interval negative_one_half negative_one_fourth)) = True
+negative_closed_reciprocal = Refl
+
+negative_left_open_reciprocal :
+  same_reciprocal_result
+    (reciprocal_interval
+      (left_open_interval (whole (-4)) (whole (-2))))
+    (reciprocal_connected
+      (right_open_interval negative_one_half negative_one_fourth)) = True
+negative_left_open_reciprocal = Refl
+
+closed_positive_from_zero :
+  same_reciprocal_result
+    (reciprocal_interval
+      (closed_interval (whole 0) (whole 2)))
+    (reciprocal_connected
+      (above one_half included)) = True
+closed_positive_from_zero = Refl
+
+open_positive_from_zero :
+  same_reciprocal_result
+    (reciprocal_interval
+      (open_interval (whole 0) (whole 2)))
+    (reciprocal_connected
+      (above one_half excluded)) = True
+open_positive_from_zero = Refl
+
+closed_negative_to_zero :
+  same_reciprocal_result
+    (reciprocal_interval
+      (closed_interval (whole (-2)) (whole 0)))
+    (reciprocal_connected
+      (below negative_one_half included)) = True
+closed_negative_to_zero = Refl
+
+open_negative_to_zero :
+  same_reciprocal_result
+    (reciprocal_interval
+      (open_interval (whole (-2)) (whole 0)))
+    (reciprocal_connected
+      (below negative_one_half excluded)) = True
+open_negative_to_zero = Refl
+
+closed_zero_crossing_splits :
+  same_reciprocal_result
+    (reciprocal_interval
+      (closed_interval (whole (-2)) (whole 3)))
+    (reciprocal_split
+      (below negative_one_half included)
+      (above one_third included)) = True
+closed_zero_crossing_splits = Refl
+
+open_zero_crossing_splits :
+  same_reciprocal_result
+    (reciprocal_interval
+      (open_interval (whole (-2)) (whole 3)))
+    (reciprocal_split
+      (below negative_one_half excluded)
+      (above one_third excluded)) = True
+open_zero_crossing_splits = Refl
+
+zero_singleton_has_empty_reciprocal :
+  same_reciprocal_result
+    (reciprocal_interval
+      (closed_interval (whole 0) (whole 0)))
+    reciprocal_empty = True
+zero_singleton_has_empty_reciprocal = Refl
+
+empty_has_empty_reciprocal :
+  same_reciprocal_result
+    (reciprocal_interval no_points)
+    reciprocal_empty = True
+empty_has_empty_reciprocal = Refl
+
+unbounded_reciprocal_is_deferred :
+  same_reciprocal_result
+    (reciprocal_interval Interval.Exact.all_numbers)
+    reciprocal_unbounded_deferred = True
+unbounded_reciprocal_is_deferred = Refl
+
+positive_rational_reciprocal :
+  reciprocal_rational (over 2 (OnePlus 2)) =
+    Just (over 3 (OnePlus 1))
+positive_rational_reciprocal = Refl
+
+negative_rational_reciprocal :
+  reciprocal_rational (over (-2) (OnePlus 2)) =
+    Just (over (-3) (OnePlus 1))
+negative_rational_reciprocal = Refl
+
+zero_rational_has_no_reciprocal :
+  reciprocal_rational (whole 0) = Nothing
+zero_rational_has_no_reciprocal = Refl
