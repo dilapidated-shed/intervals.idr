@@ -1,10 +1,10 @@
 # intervals.idr
 
-An exact rational interval library and an optional, small evidence wrapper, intended for eventual use by [Idriç](https://github.com/isomorphisms/Idric) and [Econometrician-in-a-Box](https://github.com/bl4ckb4ll/econometrician). The library is a concrete numerical/type-system convenience, comparable to units of measure; it is **not a foundation for incomplete knowledge**.
+An exact rational interval library intended for Idriç. The project is a concrete numerical and type-system convenience, comparable to units of measure; it is **not a foundation for incomplete knowledge**.
 
-An **interval** represents a connected, convex subset of an ordered line, potentially empty or unbounded. It is useful even when the quantities are exactly known; it is not inherently a model of ignorance. By itself, it is not a probability distribution, confidence interval, credible interval, measurement claim, or evidence of Gaussian error. `NoBounds` records missing information without substituting zero, the empty interval, an unbounded interval, or a guessed prior.
+An interval represents a connected, convex subset of an ordered line, potentially empty or unbounded. It is useful even when all quantities are known exactly. By itself, an interval is not a probability distribution, confidence interval, credible interval, measurement claim, or general model of ignorance.
 
-Broader uncertainty might require indefinitely many interacting or nested ε-like regions, with unknown resolution conditions and even unknown nesting depth, and cannot be assumed to reduce to linear intervals, finite trees, or a chosen probability distribution. No such general theory is claimed here.
+Broader uncertainty may involve indefinitely many interacting or nested ε-like regions, unknown resolution conditions, unknown containment depth, and strategically distorted information. No such general theory is claimed or forced into this library.
 
 ## Maintained Idriç source
 
@@ -16,10 +16,9 @@ Broader uncertainty might require indefinitely many interacting or nested ε-lik
 ## Idris 2 compatibility prototype
 
 - `src/Interval/Exact.idr`: exact rationals with structurally positive denominator; finite/unbounded endpoints, open/closed membership, emptiness, Minkowski addition, interval subtraction, and intersection.
-- `src/Interval/Evidence.idr`: distinguishes explicitly reported bounds from unavailable bounds and retains source identities through addition.
-- `src/Interval/Tests.idr`: compile-time equality witnesses for endpoint behavior, arithmetic, unboundedness, dependency loss, missing information, and source propagation.
-- `docs/SEMANTICS.md`: mathematical assumptions, distinctions from statistical intervals, and known limitations.
-- `docs/IDRIC.md`: intended bridge to the **current** Idriç language, not a claimed compiler integration.
+- `src/Interval/Tests.idr`: compile-time equality witnesses for endpoint behavior, arithmetic, unboundedness, and the dependency loss in `x - x`.
+- `docs/SEMANTICS.md`: mathematical assumptions and known limitations.
+- `docs/IDRIC.md`: intended bridge to the current Idriç language.
 
 The `.idr` files under `src/` are legacy compatibility tests, not the maintained API. A passing generic Idris 2 build is not evidence that the Idriç source compiled or that a direct target backend ran.
 
@@ -32,6 +31,6 @@ idris2 --build intervals.ipkg
 ./build/exec/interval-tests
 ```
 
-The compilation is the essential proof check: `Refl` fixtures do not merely print that they pass. Backend execution must also succeed to claim the runnable test program works. CI uses a separate compiler environment and must be checked against the actual PR commit.
+Compilation checks the concrete `Refl` fixtures; it does not establish the general correctness theorems still listed in issue #1 and the reference-code proof map. Backend execution must also succeed to claim the runnable test program works.
 
 See [design issue #1](https://github.com/dilapidated-shed/intervals.idr/issues/1) and [Idriç issue #30](https://github.com/isomorphisms/Idric/issues/30).
