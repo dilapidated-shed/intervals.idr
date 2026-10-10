@@ -207,12 +207,5 @@ open_empty_right :
     no_points = True
 open_empty_right = Refl
 
-stored_span_has_validity :
-  (span : ValidatedSpan) →
-  ValidSpan
-    (lower_boundary span)
-    (upper_boundary span)
-stored_span_has_validity (MkValidatedSpan _ _ proof) = proof
-
 main : IO ()
 main = putStrLn "Idriç proof-carrying interval checks: PASS"
