@@ -1,0 +1,82 @@
+name: Idriç interval type acceptance
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'idric/**'
+      - 'intervals-idric.ipkg'
+      - '.github/workflows/idric-acceptance.yml'
+  pull_request:
+    paths:
+      - 'idric/**'
+      - 'intervals-idric.ipkg'
+      - '.github/workflows/idric-acceptance.yml'
+
+concurrency:
+  group: idric-interval-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  idric-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out the exact proposed source head
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Check out the exact Idriç compiler revision
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: isomorphisms/Idric
+          ref: 94dfd99bd3e376507fedc8611053b7173b2519f0
+          path: .toolchain/idric
+          persist-credentials: false
+
+      - name: Restore the pinned Idriç build
+        id: idric-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: |
+            .toolchain/idric/_/.tools
+            .toolchain/idric/_/bootstrap-build
+            .toolchain/idric/_/build
+            .toolchain/idric/_/libs/*/build
+            .toolchain/idric/_/support/c
+          key: idric-${{ runner.os }}-94dfd99bd3e376507fedc8611053b7173b2519f0-v2
+
+      - name: Bootstrap that Idriç compiler
+        if: steps.idric-cache.outputs.cache-hit != 'true'
+        run: sh .toolchain/idric/edric bootstrap
+
+      - name: Save the pinned Idriç build before checking project source
+        if: steps.idric-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: |
+            .toolchain/idric/_/.tools
+            .toolchain/idric/_/bootstrap-build
+            .toolchain/idric/_/build
+            .toolchain/idric/_/libs/*/build
+            .toolchain/idric/_/support/c
+          key: idric-${{ runner.os }}-94dfd99bd3e376507fedc8611053b7173b2519f0-v2
+
+      - name: Compile Idriç interval types and concrete proofs
+        shell: bash
+        run: |
+          idric_hidden="$GITHUB_WORKSPACE/.toolchain/idric/_"
+          export PATH="$idric_hidden/.tools/bin:$PATH"
+          export IDRIS2_PATH="$idric_hidden/libs/prelude/build/ttc:$idric_hidden/libs/base/build/ttc:$idric_hidden/libs/linear/build/ttc:$idric_hidden/libs/network/build/ttc:$idric_hidden/libs/contrib/build/ttc:$idric_hidden/libs/test/build/ttc"
+          export IDRIS2_DATA="$idric_hidden/support"
+          export IDRIS2_LIBS="$idric_hidden/support/c"
+          "$idric_hidden/build/exec/idris2" --build intervals-idric.ipkg
+
+      - name: Run the Idriç checked fixture
+        run: ./build/exec/interval-idric-tests

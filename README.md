@@ -1,9 +1,21 @@
 # intervals.idr
 
-An independent home for exact intervals and uncertainty semantics that can be carried into Idriç and consumed by [Econometrician-in-a-Box](https://github.com/bl4ckb4ll/econometrician).
+An exact rational interval library written in Idriç. The project is a concrete numerical and type-system convenience, comparable to units of measure; it is **not a foundation for incomplete knowledge**.
 
-The central distinction is between **a set of possible values** and **a claim about why or how well a value is known**. An interval alone has no confidence level, distribution, sampling model, physical provenance, or Gaussian interpretation.
+An interval represents a connected, convex subset of an ordered line, potentially empty or unbounded. It is useful even when all quantities are known exactly. By itself, an interval is not a probability distribution, confidence interval, credible interval, measurement claim, or general model of ignorance.
 
-The initial executable target is an Idris 2-compatible exact-rational interval core. Modern Idriç semantic contracts will be developed alongside it without claiming that the current compiler has already accepted or executed them. This repository remains independent of the Idriç compiler; checked source and downstream integration must be verified separately.
+Broader uncertainty may involve indefinitely many interacting or nested ε-like regions, unknown resolution conditions, unknown containment depth, and strategically distorted information. No such general theory is claimed or forced into this library.
 
-See [issue #1](https://github.com/dilapidated-shed/intervals.idr/issues/1), [Idriç issue #30](https://github.com/isomorphisms/Idric/issues/30), and [Econometrician](https://github.com/bl4ckb4ll/econometrician). The first implementation is on a feature branch; the empty initial repository did not contain executable code.
+## Source
+
+- `idric/Interval/Exact.idric`: exact rational endpoints; empty, open, closed and unbounded intervals; membership, addition, subtraction and intersection.
+- `idric/Interval/Check.idric`: concrete propositions checked by Idriç.
+- `intervals-idric.ipkg`: package for the pinned contemporary Idriç compiler.
+- `docs/SEMANTICS.md`: mathematical meaning and limitations.
+- `docs/IDRIC-PRIMARY.md`: language ownership and verification boundary.
+
+The repository deliberately has no second implementation in generic Idris 2. Idriç is the maintained language and acceptance boundary. A host-level Idriç pass still does not establish direct Android, ARM, DEX, GPU, or other target-backend execution.
+
+Concrete `Refl` fixtures establish particular reductions, not the general correctness theorems listed in [issue #1](https://github.com/dilapidated-shed/intervals.idr/issues/1) and the reference-code proof map.
+
+See also [Idriç issue #30](https://github.com/isomorphisms/Idric/issues/30).
