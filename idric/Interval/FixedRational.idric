@@ -1,0 +1,255 @@
+module Interval.FixedRational
+
+import Interval.Exact
+import Interval.SignedDifference
+
+%unbound_implicits off
+
+-- A proof-oriented exact rational whose positive denominator is a type index.
+-- Values with the same denominator can use the already proved signed-numerator
+-- order and addition laws directly. Different denominators require an explicit
+-- rescaling/common-denominator step rather than hidden coercion.
+public export
+data FixedRational : PositiveDenominator → Type where
+  RationalNumerator :
+    {denominator : PositiveDenominator} →
+    SignedDifference →
+    FixedRational denominator
+
+public export
+fixed_numerator :
+  {denominator : PositiveDenominator} →
+  FixedRational denominator →
+  SignedDifference
+fixed_numerator (RationalNumerator numerator) = numerator
+
+public export
+fixed_rational_order :
+  {denominator : PositiveDenominator} →
+  FixedRational denominator →
+  FixedRational denominator →
+  Type
+fixed_rational_order
+  (RationalNumerator left)
+  (RationalNumerator right) =
+    DifferenceOrder left right
+
+public export
+fixed_rational_order_boolean :
+  {denominator : PositiveDenominator} →
+  FixedRational denominator →
+  FixedRational denominator →
+  Bool
+fixed_rational_order_boolean
+  (RationalNumerator left)
+  (RationalNumerator right) =
+    difference_order left right
+
+public export
+fixed_order_evidence :
+  {denominator : PositiveDenominator} →
+  (left, right : FixedRational denominator) →
+  fixed_rational_order left right
+fixed_order_evidence
+  (RationalNumerator left)
+  (RationalNumerator right) =
+    difference_order_reflexive left
+
+-- The preceding reflexive helper is intentionally narrow. General evidence is
+-- supplied from signed-numerator order, preserving the exact operands.
+public export
+fixed_order_from_difference :
+  {denominator : PositiveDenominator} →
+  (left, right : SignedDifference) →
+  DifferenceOrder left right →
+  fixed_rational_order
+    (RationalNumerator left)
+    (RationalNumerator right)
+fixed_order_from_difference left right evidence = evidence
+
+public export
+fixed_order_to_difference :
+  {denominator : PositiveDenominator} →
+  (left, right : SignedDifference) →
+  fixed_rational_order
+    (RationalNumerator left)
+    (RationalNumerator right) →
+  DifferenceOrder left right
+fixed_order_to_difference left right evidence = evidence
+
+public export
+add_fixed_rational :
+  {denominator : PositiveDenominator} →
+  FixedRational denominator →
+  FixedRational denominator →
+  FixedRational denominator
+add_fixed_rational
+  (RationalNumerator left)
+  (RationalNumerator right) =
+    RationalNumerator (add_difference left right)
+
+public export
+negate_fixed_rational :
+  {denominator : PositiveDenominator} →
+  FixedRational denominator →
+  FixedRational denominator
+negate_fixed_rational (RationalNumerator numerator) =
+  RationalNumerator (negate_difference numerator)
+
+public export
+fixed_add_order :
+  {denominator : PositiveDenominator} →
+  (first_left, first_right : FixedRational denominator) →
+  (second_left, second_right : FixedRational denominator) →
+  fixed_rational_order first_left first_right →
+  fixed_rational_order second_left second_right →
+  fixed_rational_order
+    (add_fixed_rational first_left second_left)
+    (add_fixed_rational first_right second_right)
+fixed_add_order
+  (RationalNumerator first_left)
+  (RationalNumerator first_right)
+  (RationalNumerator second_left)
+  (RationalNumerator second_right)
+  first_order
+  second_order =
+    difference_add_order
+      first_left
+      first_right
+      second_left
+      second_right
+      first_order
+      second_order
+
+-- Computational bridge to the production ExactRational representation. This
+-- bridge does not by itself prove that primitive Integer arithmetic implements
+-- every SignedDifference law; the structural proofs remain above this boundary.
+public export
+signed_difference_integer : SignedDifference → ±Number
+signed_difference_integer (Difference positive negative) =
+  cast positive - cast negative
+
+public export
+fixed_to_exact :
+  {denominator : PositiveDenominator} →
+  FixedRational denominator →
+  ExactRational
+fixed_to_exact {denominator} (RationalNumerator numerator) =
+  Ratio (signed_difference_integer numerator) denominator
+
+public export
+record ClosedFixedRationalInterval
+  (denominator : PositiveDenominator) where
+  constructor ClosedFixedRationalSpan
+  lower_fixed : FixedRational denominator
+  upper_fixed : FixedRational denominator
+  valid_fixed_bounds : fixed_rational_order lower_fixed upper_fixed
+
+public export
+data ClosedFixedRationalMember :
+  {denominator : PositiveDenominator} →
+  FixedRational denominator →
+  ClosedFixedRationalInterval denominator →
+  Type where
+  InsideClosedFixedRational :
+    {denominator : PositiveDenominator} →
+    (lower_value, member_value, upper_value : FixedRational denominator) →
+    (validity : fixed_rational_order lower_value upper_value) →
+    fixed_rational_order lower_value member_value →
+    fixed_rational_order member_value upper_value →
+    ClosedFixedRationalMember
+      member_value
+      (ClosedFixedRationalSpan
+        lower_value
+        upper_value
+        validity)
+
+public export
+add_closed_fixed_intervals :
+  {denominator : PositiveDenominator} →
+  ClosedFixedRationalInterval denominator →
+  ClosedFixedRationalInterval denominator →
+  ClosedFixedRationalInterval denominator
+add_closed_fixed_intervals
+  (ClosedFixedRationalSpan
+    left_lower
+    left_upper
+    left_validity)
+  (ClosedFixedRationalSpan
+    right_lower
+    right_upper
+    right_validity) =
+      ClosedFixedRationalSpan
+        (add_fixed_rational left_lower right_lower)
+        (add_fixed_rational left_upper right_upper)
+        (fixed_add_order
+          left_lower
+          left_upper
+          right_lower
+          right_upper
+          left_validity
+          right_validity)
+
+-- Universal soundness of closed-interval addition for exact rationals sharing
+-- one positive denominator.
+public export
+fixed_addition_encloses_closed_members :
+  {denominator : PositiveDenominator} →
+  (left_interval, right_interval :
+    ClosedFixedRationalInterval denominator) →
+  (left_member, right_member : FixedRational denominator) →
+  ClosedFixedRationalMember left_member left_interval →
+  ClosedFixedRationalMember right_member right_interval →
+  ClosedFixedRationalMember
+    (add_fixed_rational left_member right_member)
+    (add_closed_fixed_intervals left_interval right_interval)
+fixed_addition_encloses_closed_members
+  (ClosedFixedRationalSpan
+    left_lower
+    left_upper
+    left_validity)
+  (ClosedFixedRationalSpan
+    right_lower
+    right_upper
+    right_validity)
+  left_member
+  right_member
+  (InsideClosedFixedRational
+    _
+    _
+    _
+    _
+    left_lower_evidence
+    left_upper_evidence)
+  (InsideClosedFixedRational
+    _
+    _
+    _
+    _
+    right_lower_evidence
+    right_upper_evidence) =
+      InsideClosedFixedRational
+        (add_fixed_rational left_lower right_lower)
+        (add_fixed_rational left_member right_member)
+        (add_fixed_rational left_upper right_upper)
+        (fixed_add_order
+          left_lower
+          left_upper
+          right_lower
+          right_upper
+          left_validity
+          right_validity)
+        (fixed_add_order
+          left_lower
+          left_member
+          right_lower
+          right_member
+          left_lower_evidence
+          right_lower_evidence)
+        (fixed_add_order
+          left_member
+          left_upper
+          right_member
+          right_upper
+          left_upper_evidence
+          right_upper_evidence)
