@@ -1,0 +1,167 @@
+module Interval.FixedRationalCheck
+
+import Data.So
+import Interval.Exact
+import Interval.FixedRational
+import Interval.NaturalProofs
+import Interval.SignedDifference
+
+%unbound_implicits off
+
+halves : PositiveDenominator
+halves = OnePlus 1
+
+minus_three_halves : FixedRational halves
+minus_three_halves = RationalNumerator (negative_difference 3)
+
+minus_one_half : FixedRational halves
+minus_one_half = RationalNumerator (negative_difference 1)
+
+one_half : FixedRational halves
+one_half = RationalNumerator (positive_difference 1)
+
+two_halves : FixedRational halves
+two_halves = RationalNumerator (positive_difference 2)
+
+four_halves : FixedRational halves
+four_halves = RationalNumerator (positive_difference 4)
+
+five_halves : FixedRational halves
+five_halves = RationalNumerator (positive_difference 5)
+
+first_halves_interval : ClosedFixedRationalInterval halves
+first_halves_interval =
+  ClosedFixedRationalSpan
+    minus_three_halves
+    one_half
+    (fixed_order_from_difference
+      (negative_difference 3)
+      (positive_difference 1)
+      (difference_order_evidence
+        (negative_difference 3)
+        (positive_difference 1)
+        Oh))
+
+second_halves_interval : ClosedFixedRationalInterval halves
+second_halves_interval =
+  ClosedFixedRationalSpan
+    two_halves
+    five_halves
+    (fixed_order_from_difference
+      (positive_difference 2)
+      (positive_difference 5)
+      (difference_order_evidence
+        (positive_difference 2)
+        (positive_difference 5)
+        Oh))
+
+minus_one_half_is_in_first :
+  ClosedFixedRationalMember
+    minus_one_half
+    first_halves_interval
+minus_one_half_is_in_first =
+  InsideClosedFixedRational
+    minus_three_halves
+    minus_one_half
+    one_half
+    (fixed_order_from_difference
+      (negative_difference 3)
+      (positive_difference 1)
+      (difference_order_evidence
+        (negative_difference 3)
+        (positive_difference 1)
+        Oh))
+    (fixed_order_from_difference
+      (negative_difference 3)
+      (negative_difference 1)
+      (difference_order_evidence
+        (negative_difference 3)
+        (negative_difference 1)
+        Oh))
+    (fixed_order_from_difference
+      (negative_difference 1)
+      (positive_difference 1)
+      (difference_order_evidence
+        (negative_difference 1)
+        (positive_difference 1)
+        Oh))
+
+four_halves_is_in_second :
+  ClosedFixedRationalMember
+    four_halves
+    second_halves_interval
+four_halves_is_in_second =
+  InsideClosedFixedRational
+    two_halves
+    four_halves
+    five_halves
+    (fixed_order_from_difference
+      (positive_difference 2)
+      (positive_difference 5)
+      (difference_order_evidence
+        (positive_difference 2)
+        (positive_difference 5)
+        Oh))
+    (fixed_order_from_difference
+      (positive_difference 2)
+      (positive_difference 4)
+      (difference_order_evidence
+        (positive_difference 2)
+        (positive_difference 4)
+        Oh))
+    (fixed_order_from_difference
+      (positive_difference 4)
+      (positive_difference 5)
+      (difference_order_evidence
+        (positive_difference 4)
+        (positive_difference 5)
+        Oh))
+
+fixed_rational_sum_is_enclosed :
+  ClosedFixedRationalMember
+    (add_fixed_rational minus_one_half four_halves)
+    (add_closed_fixed_intervals
+      first_halves_interval
+      second_halves_interval)
+fixed_rational_sum_is_enclosed =
+  fixed_addition_encloses_closed_members
+    first_halves_interval
+    second_halves_interval
+    minus_one_half
+    four_halves
+    minus_one_half_is_in_first
+    four_halves_is_in_second
+
+-- This theorem remains open in the positive denominator, both intervals and
+-- both member values. It is not specialized to halves.
+fixed_rational_addition_open :
+  {denominator : PositiveDenominator} →
+  (left_interval, right_interval :
+    ClosedFixedRationalInterval denominator) →
+  (left_member, right_member : FixedRational denominator) →
+  ClosedFixedRationalMember left_member left_interval →
+  ClosedFixedRationalMember right_member right_interval →
+  ClosedFixedRationalMember
+    (add_fixed_rational left_member right_member)
+    (add_closed_fixed_intervals left_interval right_interval)
+fixed_rational_addition_open =
+  fixed_addition_encloses_closed_members
+
+-- The computational bridge preserves this concrete noncanonical numerator.
+noncanonical_half_bridge :
+  rational_equal
+    (fixed_to_exact
+      (the
+        (FixedRational halves)
+        (RationalNumerator (Difference 3 2))))
+    (over 1 halves) = True
+noncanonical_half_bridge = Refl
+
+fixed_addition_matches_exact_example :
+  rational_equal
+    (fixed_to_exact
+      (add_fixed_rational minus_one_half four_halves))
+    (add_rational
+      (fixed_to_exact minus_one_half)
+      (fixed_to_exact four_halves)) = True
+fixed_addition_matches_exact_example = Refl
