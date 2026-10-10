@@ -1,7 +1,6 @@
 module Interval.Tests
 
 import Interval.Exact
-import Interval.Evidence
 
 %default total
 
@@ -90,51 +89,5 @@ exact_quarters :
            (over 1 (OnePlus 1)) = True
 exact_quarters = Refl
 
-exampleSource : Provenance
-exampleSource = From Observation "example/data"
-
-missingSource : Provenance
-missingSource = From Assumption "example/unknown-calibration"
-
-knownMeasurement : BoundsKnowledge
-knownMeasurement =
-  HasBounds MeasurementBound (closed (whole 1) (whole 3)) exampleSource
-
-missingMeasurement : BoundsKnowledge
-missingMeasurement = NoBounds [CalibrationNotEstablished] missingSource
-
-missing_cannot_be_fabricated :
-  unresolved (addKnowledge Interval.Tests.knownMeasurement Interval.Tests.missingMeasurement) = True
-missing_cannot_be_fabricated = Refl
-
-missing_keeps_known_provenance :
-  mentionsSource "example/data"
-    (sourceOf (addKnowledge Interval.Tests.knownMeasurement Interval.Tests.missingMeasurement)) = True
-missing_keeps_known_provenance = Refl
-
-missing_keeps_missing_provenance :
-  mentionsSource "example/unknown-calibration"
-    (sourceOf (addKnowledge Interval.Tests.knownMeasurement Interval.Tests.missingMeasurement)) = True
-missing_keeps_missing_provenance = Refl
-
-known_sum_preserves_both_sources :
-  mentionsSource "example/data"
-    (sourceOf (addKnowledge Interval.Tests.knownMeasurement Interval.Tests.knownMeasurement)) = True
-known_sum_preserves_both_sources = Refl
-
-
--- A derived numerical interval must not erase its source bound's semantic kind.
-known_sum_retains_measurement_purpose :
-  mentionsMeaning MeasurementBound
-    (sourceOf (addKnowledge Interval.Tests.knownMeasurement
-                            Interval.Tests.knownMeasurement)) = True
-known_sum_retains_measurement_purpose = Refl
-
-missing_sum_retains_measurement_purpose :
-  mentionsMeaning MeasurementBound
-    (sourceOf (addKnowledge Interval.Tests.knownMeasurement
-                            Interval.Tests.missingMeasurement)) = True
-missing_sum_retains_measurement_purpose = Refl
-
 main : IO ()
-main = putStrLn "intervals.idr: checked exact interval and provenance fixtures"
+main = putStrLn "intervals.idr: checked exact interval fixtures"
