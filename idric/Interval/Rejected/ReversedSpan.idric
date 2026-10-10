@@ -1,0 +1,17 @@
+module Interval.Rejected.ReversedSpan
+
+import Data.So
+import Interval.Exact
+
+%unbound_implicits off
+
+-- This file must not typecheck. The lower endpoint is greater than the upper
+-- endpoint, so `rational_less 3 1` reduces to False and no `So False` witness
+-- can be supplied to `StrictlyOrdered`.
+reversed_span : exact_interval
+reversed_span =
+  points_between
+    (MkValidatedSpan
+      (lower_at (whole 3) included)
+      (upper_at (whole 1) included)
+      (StrictlyOrdered Oh))
