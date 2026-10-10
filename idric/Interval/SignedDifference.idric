@@ -97,7 +97,7 @@ difference_order_evidence
     natural_order_from_true
       (left_positive + right_negative)
       (right_positive + left_negative)
-      (soToEq evidence)
+      (truth_to_equality evidence)
 
 public export
 difference_order_boolean :
@@ -108,7 +108,7 @@ difference_order_boolean
   {left = Difference left_positive left_negative}
   {right = Difference right_positive right_negative}
   evidence =
-    eqToSo
+    equality_to_truth
       (natural_order_to_true
         (left_positive + right_negative)
         (right_positive + left_negative)
