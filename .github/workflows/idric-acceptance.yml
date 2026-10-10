@@ -12,6 +12,10 @@ on:
       - 'intervals-idric.ipkg'
       - '.github/workflows/idric-acceptance.yml'
 
+concurrency:
+  group: idric-interval-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
