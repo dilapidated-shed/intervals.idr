@@ -1,0 +1,102 @@
+module Interval.ScalarActionCheck
+
+import Interval.Exact
+import Interval.ScalarAction
+
+%unbound_implicits off
+
+positive_scalar_preserves_order :
+  same_scaled_interval
+    (whole 2)
+    (closed_interval (whole 1) (whole 3))
+    (closed_interval (whole 2) (whole 6)) = True
+positive_scalar_preserves_order = Refl
+
+negative_scalar_reverses_order :
+  same_scaled_interval
+    (whole (-2))
+    (closed_interval (whole 1) (whole 3))
+    (closed_interval (whole (-6)) (whole (-2))) = True
+negative_scalar_reverses_order = Refl
+
+positive_scalar_preserves_half_open_boundary :
+  same_scaled_interval
+    (whole 2)
+    (left_open_interval (whole 1) (whole 3))
+    (left_open_interval (whole 2) (whole 6)) = True
+positive_scalar_preserves_half_open_boundary = Refl
+
+negative_scalar_swaps_half_open_boundary :
+  same_scaled_interval
+    (whole (-2))
+    (left_open_interval (whole 1) (whole 3))
+    (right_open_interval (whole (-6)) (whole (-2))) = True
+negative_scalar_swaps_half_open_boundary = Refl
+
+zero_scalar_collapses_nonempty_interval :
+  same_scaled_interval
+    (whole 0)
+    (open_interval (whole 1) (whole 3))
+    (closed_interval (whole 0) (whole 0)) = True
+zero_scalar_collapses_nonempty_interval = Refl
+
+zero_scalar_preserves_empty_interval :
+  same_scaled_interval
+    (whole 0)
+    no_points
+    no_points = True
+zero_scalar_preserves_empty_interval = Refl
+
+positive_scalar_on_lower_ray :
+  same_scaled_interval
+    (whole 2)
+    (above (whole 1) included)
+    (above (whole 2) included) = True
+positive_scalar_on_lower_ray = Refl
+
+negative_scalar_on_lower_ray :
+  same_scaled_interval
+    (whole (-2))
+    (above (whole 1) included)
+    (below (whole (-2)) included) = True
+negative_scalar_on_lower_ray = Refl
+
+positive_scalar_on_whole_line :
+  same_scaled_interval
+    (whole 3)
+    Interval.Exact.all_numbers
+    Interval.Exact.all_numbers = True
+positive_scalar_on_whole_line = Refl
+
+negative_scalar_on_whole_line :
+  same_scaled_interval
+    (whole (-3))
+    Interval.Exact.all_numbers
+    Interval.Exact.all_numbers = True
+negative_scalar_on_whole_line = Refl
+
+half_scalar_is_exact :
+  same_scaled_interval
+    (over 1 (OnePlus 1))
+    (closed_interval (whole 2) (whole 4))
+    (closed_interval (whole 1) (whole 2)) = True
+half_scalar_is_exact = Refl
+
+concrete_action_composition :
+  interval_equal
+    (scale_interval
+      (whole 2)
+      (scale_interval
+        (whole 3)
+        (closed_interval (whole 1) (whole 2))))
+    (scale_interval
+      (whole 6)
+      (closed_interval (whole 1) (whole 2))) = True
+concrete_action_composition = Refl
+
+empty_is_stable_under_every_scalar :
+  (scalar : ExactRational) →
+  interval_equal
+    (scale_interval scalar no_points)
+    no_points = True
+empty_is_stable_under_every_scalar scalar = Refl
