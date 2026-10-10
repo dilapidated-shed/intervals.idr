@@ -1,6 +1,0 @@
-package intervals
-version = 0.1.0
-sourcedir = "src"
-modules = Interval.Exact, Interval.Tests
-main = Interval.Tests
-executable = "interval-tests"
