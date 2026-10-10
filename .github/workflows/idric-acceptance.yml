@@ -26,7 +26,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Check out the exact proposed source head
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
 
       - name: Check out the exact Idriç compiler revision
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -34,6 +38,7 @@ jobs:
           repository: isomorphisms/Idric
           ref: 94dfd99bd3e376507fedc8611053b7173b2519f0
           path: .toolchain/idric
+          persist-credentials: false
 
       - name: Restore the pinned Idriç build
         id: idric-cache
