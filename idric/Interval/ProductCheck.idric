@@ -1,0 +1,96 @@
+module Interval.ProductCheck
+
+import Interval.Exact
+import Interval.Product
+
+%unbound_implicits off
+
+exact_rational_product :
+  rational_equal
+    (multiply_rational
+      (over 1 (OnePlus 1))
+      (over 2 (OnePlus 2)))
+    (over 1 (OnePlus 2)) = True
+exact_rational_product = Refl
+
+positive_product :
+  same_product_result
+    (multiply_intervals
+      (closed_interval (whole 1) (whole 3))
+      (closed_interval (whole 4) (whole 5)))
+    (computed_product (closed_interval (whole 4) (whole 15))) = True
+positive_product = Refl
+
+negative_product :
+  same_product_result
+    (multiply_intervals
+      (closed_interval (whole (-3)) (whole (-1)))
+      (closed_interval (whole (-5)) (whole (-4))))
+    (computed_product (closed_interval (whole 4) (whole 15))) = True
+negative_product = Refl
+
+sign_crossing_product :
+  same_product_result
+    (multiply_intervals
+      (closed_interval (whole (-2)) (whole 3))
+      (closed_interval (whole (-4)) (whole 5)))
+    (computed_product (closed_interval (whole (-12)) (whole 15))) = True
+sign_crossing_product = Refl
+
+open_positive_product :
+  same_product_result
+    (multiply_intervals
+      (open_interval (whole 0) (whole 2))
+      (open_interval (whole 0) (whole 3)))
+    (computed_product (open_interval (whole 0) (whole 6))) = True
+open_positive_product = Refl
+
+-- Zero is attained because the left factor contains zero. The upper product 6
+-- is not attained because the left upper endpoint is excluded.
+zero_attained_inside_product :
+  same_product_result
+    (multiply_intervals
+      (right_open_interval (whole 0) (whole 2))
+      (left_open_interval (whole 0) (whole 3)))
+    (computed_product (right_open_interval (whole 0) (whole 6))) = True
+zero_attained_inside_product = Refl
+
+-- Endpoint products alone would mark zero excluded here because (-1,1) has
+-- open endpoints. The zero singleton factor makes every actual product zero.
+open_times_zero_singleton :
+  same_product_result
+    (multiply_intervals
+      (open_interval (whole (-1)) (whole 1))
+      (closed_interval (whole 0) (whole 0)))
+    (computed_product (closed_interval (whole 0) (whole 0))) = True
+open_times_zero_singleton = Refl
+
+open_symmetric_product :
+  same_product_result
+    (multiply_intervals
+      (open_interval (whole (-1)) (whole 1))
+      (open_interval (whole (-1)) (whole 1)))
+    (computed_product (open_interval (whole (-1)) (whole 1))) = True
+open_symmetric_product = Refl
+
+closed_symmetric_product :
+  same_product_result
+    (multiply_intervals
+      (closed_interval (whole (-1)) (whole 1))
+      (closed_interval (whole (-1)) (whole 1)))
+    (computed_product (closed_interval (whole (-1)) (whole 1))) = True
+closed_symmetric_product = Refl
+
+empty_product :
+  same_product_result
+    (multiply_intervals no_points Interval.Exact.all_numbers)
+    (computed_product no_points) = True
+empty_product = Refl
+
+unbounded_product_is_explicitly_deferred :
+  same_product_result
+    (multiply_intervals
+      (above (whole 0) included)
+      (closed_interval (whole 2) (whole 3)))
+    unbounded_product_deferred = True
+unbounded_product_is_explicitly_deferred = Refl

@@ -1,0 +1,173 @@
+module Interval.Product
+
+import Interval.Exact
+
+%unbound_implicits off
+
+public export
+multiply_rational : ExactRational → ExactRational → ExactRational
+multiply_rational (Ratio a b) (Ratio c d) =
+  Ratio (a × c) (multiply_denominators b d)
+
+-- A finite view is available only when both endpoints are numerical. The
+-- validity witness remains in the original interval; this view is used only to
+-- calculate endpoint products.
+public export
+data FiniteSpanView = FiniteSpan
+  ExactRational endpoint_membership
+  ExactRational endpoint_membership
+
+public export
+finite_span_view : exact_interval → Maybe FiniteSpanView
+finite_span_view no_points = Nothing
+finite_span_view
+  (points_between
+    (Span
+      (lower_at lower lower_kind)
+      (upper_at upper upper_kind)
+      _)) =
+        Just (FiniteSpan lower lower_kind upper upper_kind)
+finite_span_view _ = Nothing
+
+public export
+data ProductCandidate = Candidate ExactRational endpoint_membership
+
+public export
+either_included : endpoint_membership → endpoint_membership → endpoint_membership
+either_included included _ = included
+either_included _ included = included
+either_included excluded excluded = excluded
+
+public export
+candidate_product :
+  ExactRational → endpoint_membership →
+  ExactRational → endpoint_membership →
+  ProductCandidate
+candidate_product left left_kind right right_kind =
+  Candidate
+    (multiply_rational left right)
+    (both_included left_kind right_kind)
+
+public export
+lower_candidate : ProductCandidate → ProductCandidate → ProductCandidate
+lower_candidate
+  left@(Candidate left_value left_kind)
+  right@(Candidate right_value right_kind) =
+    if rational_less left_value right_value
+      then left
+      else if rational_less right_value left_value
+        then right
+        else Candidate left_value (either_included left_kind right_kind)
+
+public export
+upper_candidate : ProductCandidate → ProductCandidate → ProductCandidate
+upper_candidate
+  left@(Candidate left_value left_kind)
+  right@(Candidate right_value right_kind) =
+    if rational_less left_value right_value
+      then right
+      else if rational_less right_value left_value
+        then left
+        else Candidate left_value (either_included left_kind right_kind)
+
+public export
+lowest_of_four :
+  ProductCandidate → ProductCandidate →
+  ProductCandidate → ProductCandidate →
+  ProductCandidate
+lowest_of_four first second third fourth =
+  lower_candidate
+    (lower_candidate first second)
+    (lower_candidate third fourth)
+
+public export
+highest_of_four :
+  ProductCandidate → ProductCandidate →
+  ProductCandidate → ProductCandidate →
+  ProductCandidate
+highest_of_four first second third fourth =
+  upper_candidate
+    (upper_candidate first second)
+    (upper_candidate third fourth)
+
+public export
+finite_contains_zero : FiniteSpanView → Bool
+finite_contains_zero (FiniteSpan lower lower_kind upper upper_kind) =
+  lower_allows (lower_at lower lower_kind) (whole 0) &&
+  upper_allows (upper_at upper upper_kind) (whole 0)
+
+-- Endpoint products usually determine whether an extremum is attained. Zero
+-- needs one extra rule: if either nonempty factor actually contains zero, then
+-- zero is attained even when the other factor's endpoint representation is
+-- open. This matters for examples such as (-1,1) × [0,0].
+public export
+include_attained_zero : Bool → ProductCandidate → ProductCandidate
+include_attained_zero zero_is_attained (Candidate value kind) =
+  if zero_is_attained && rational_equal value (whole 0)
+    then Candidate value included
+    else Candidate value kind
+
+public export
+multiply_finite_spans : FiniteSpanView → FiniteSpanView → exact_interval
+multiply_finite_spans
+  left@(FiniteSpan left_lower left_lower_kind left_upper left_upper_kind)
+  right@(FiniteSpan right_lower right_lower_kind right_upper right_upper_kind) =
+    let lower_lower =
+          candidate_product
+            left_lower left_lower_kind
+            right_lower right_lower_kind
+        lower_upper =
+          candidate_product
+            left_lower left_lower_kind
+            right_upper right_upper_kind
+        upper_lower =
+          candidate_product
+            left_upper left_upper_kind
+            right_lower right_lower_kind
+        upper_upper =
+          candidate_product
+            left_upper left_upper_kind
+            right_upper right_upper_kind
+        zero_is_attained = finite_contains_zero left || finite_contains_zero right
+        product_lower =
+          include_attained_zero zero_is_attained
+            (lowest_of_four lower_lower lower_upper upper_lower upper_upper)
+        product_upper =
+          include_attained_zero zero_is_attained
+            (highest_of_four lower_lower lower_upper upper_lower upper_upper)
+    in case product_lower of
+         Candidate lower lower_kind =>
+           case product_upper of
+             Candidate upper upper_kind =>
+               make_interval
+                 (lower_at lower lower_kind)
+                 (upper_at upper upper_kind)
+
+-- Unbounded multiplication has sign-sensitive infinity and zero cases. The
+-- first slice refuses that case explicitly rather than manufacturing a single
+-- interval with unsound endpoints.
+public export
+choice interval_product_result one_of
+  computed_product exact_interval
+  unbounded_product_deferred
+
+public export
+multiply_intervals : exact_interval → exact_interval → interval_product_result
+multiply_intervals no_points _ = computed_product no_points
+multiply_intervals _ no_points = computed_product no_points
+multiply_intervals left right =
+  case finite_span_view left of
+    Nothing => unbounded_product_deferred
+    Just left_span =>
+      case finite_span_view right of
+        Nothing => unbounded_product_deferred
+        Just right_span =>
+          computed_product (multiply_finite_spans left_span right_span)
+
+public export
+same_product_result : interval_product_result → interval_product_result → Bool
+same_product_result
+  (computed_product left)
+  (computed_product right) = interval_equal left right
+same_product_result unbounded_product_deferred unbounded_product_deferred = True
+same_product_result _ _ = False
