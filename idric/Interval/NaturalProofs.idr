@@ -2,6 +2,7 @@ module Interval.NaturalProofs
 
 import Data.Nat
 import Data.Nat.Order.Properties
+import Data.So
 import Syntax.PreorderReasoning
 
 %default total
@@ -12,6 +13,14 @@ import Syntax.PreorderReasoning
 public export
 NaturalOrder : Nat -> Nat -> Type
 NaturalOrder = LTE
+
+public export
+truth_to_equality : So condition -> condition = True
+truth_to_equality = soToEq
+
+public export
+equality_to_truth : condition = True -> So condition
+equality_to_truth = eqToSo
 
 public export
 natural_order : Nat -> Nat -> Bool
