@@ -24,7 +24,7 @@ two_before_four :
     (positive_difference 4)
 two_before_four = difference_order_evidence Oh
 
--- (-3) + 2 <= (-1) + 4 follows from the general monotonicity theorem.
+-- (-3) + 2 ≤ (-1) + 4 follows from the general monotonicity theorem.
 monotone_sum_evidence :
   DifferenceOrder
     (add_difference (negative_difference 3) (positive_difference 2))
@@ -39,7 +39,7 @@ monotone_sum_boolean :
 monotone_sum_boolean =
   truth_to_equality (difference_order_boolean monotone_sum_evidence)
 
--- Negating -3 <= -1 gives 1 <= 3.
+-- Negating -3 ≤ -1 gives 1 ≤ 3.
 negation_reverses_order :
   DifferenceOrder
     (negate_difference (negative_difference 1))
@@ -97,3 +97,22 @@ exact_signed_product = Refl
 reflexive_open_value :
   (value : SignedDifference) → DifferenceOrder value value
 reflexive_open_value = difference_order_reflexive
+
+public export
+decision_is_yes : {statement : Type} → Dec statement → Bool
+decision_is_yes (Yes _) = True
+decision_is_yes (No _) = False
+
+decidable_order_accepts_true_case :
+  decision_is_yes
+    (decide_difference_order
+      (negative_difference 3)
+      (negative_difference 1)) = True
+decidable_order_accepts_true_case = Refl
+
+decidable_order_rejects_reverse_case :
+  decision_is_yes
+    (decide_difference_order
+      (positive_difference 3)
+      (positive_difference 1)) = False
+decidable_order_rejects_reverse_case = Refl
