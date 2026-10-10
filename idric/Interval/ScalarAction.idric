@@ -18,11 +18,15 @@ scale_rational
       (scalar_numerator × value_numerator)
       (multiply_denominators scalar_denominator value_denominator)
 
+-- These boundary maps remain public because checked propositions in separate
+-- modules must be able to reduce through `scale_interval` definitionally.
+public export
 positive_scaled_lower : ExactRational → lower_bound → lower_bound
 positive_scaled_lower _ unbounded_below = unbounded_below
 positive_scaled_lower scalar (lower_at value kind) =
   lower_at (scale_rational scalar value) kind
 
+public export
 positive_scaled_upper : ExactRational → upper_bound → upper_bound
 positive_scaled_upper _ unbounded_above = unbounded_above
 positive_scaled_upper scalar (upper_at value kind) =
@@ -31,11 +35,13 @@ positive_scaled_upper scalar (upper_at value kind) =
 -- A negative scalar reverses order. The old upper bound becomes the new lower
 -- bound, and the old lower bound becomes the new upper bound. Endpoint
 -- membership itself is preserved.
+public export
 negative_scaled_lower : ExactRational → upper_bound → lower_bound
 negative_scaled_lower _ unbounded_above = unbounded_below
 negative_scaled_lower scalar (upper_at value kind) =
   lower_at (scale_rational scalar value) kind
 
+public export
 negative_scaled_upper : ExactRational → lower_bound → upper_bound
 negative_scaled_upper _ unbounded_below = unbounded_above
 negative_scaled_upper scalar (lower_at value kind) =
