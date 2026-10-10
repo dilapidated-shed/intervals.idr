@@ -57,23 +57,26 @@ hull_intervals
 -- Equal boundary values form one connected union when either side includes the
 -- shared point. A genuine gap remains only when both sides exclude it.
 public export
-joinable_in_order : exact_interval → exact_interval → Bool
-joinable_in_order no_points _ = True
-joinable_in_order _ no_points = True
-joinable_in_order
-  (points_between (Span _ unbounded_above _))
-  _ = True
-joinable_in_order
-  _
-  (points_between (Span unbounded_below _ _)) = True
-joinable_in_order
-  (points_between (Span _ (upper_at left_limit left_kind) _))
-  (points_between (Span (lower_at right_limit right_kind) _ _)) =
+boundary_joinable : upper_bound → lower_bound → Bool
+boundary_joinable unbounded_above _ = True
+boundary_joinable _ unbounded_below = True
+boundary_joinable
+  (upper_at left_limit left_kind)
+  (lower_at right_limit right_kind) =
     if rational_less left_limit right_limit
       then False
       else if rational_equal left_limit right_limit
         then is_included left_kind || is_included right_kind
         else True
+
+public export
+joinable_in_order : exact_interval → exact_interval → Bool
+joinable_in_order no_points _ = True
+joinable_in_order _ no_points = True
+joinable_in_order
+  (points_between (Span _ left_upper _))
+  (points_between (Span right_lower _ _)) =
+    boundary_joinable left_upper right_lower
 
 public export
 normalize_interval_pair :
