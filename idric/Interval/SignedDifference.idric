@@ -88,14 +88,17 @@ difference_order
       (left_positive + right_negative)
       (right_positive + left_negative)
 
+-- The operands are explicit because the cross-sum proof type is deliberately
+-- non-injective: a proof does not identify which pair representation produced
+-- the same signed value.
 public export
 difference_order_evidence :
-  {left, right : SignedDifference} →
+  (left, right : SignedDifference) →
   So (difference_order left right) →
   DifferenceOrder left right
 difference_order_evidence
-  {left = Difference left_positive left_negative}
-  {right = Difference right_positive right_negative}
+  (Difference left_positive left_negative)
+  (Difference right_positive right_negative)
   evidence =
     natural_order_from_true
       (left_positive + right_negative)
@@ -104,12 +107,12 @@ difference_order_evidence
 
 public export
 difference_order_boolean :
-  {left, right : SignedDifference} →
+  (left, right : SignedDifference) →
   DifferenceOrder left right →
   So (difference_order left right)
 difference_order_boolean
-  {left = Difference left_positive left_negative}
-  {right = Difference right_positive right_negative}
+  (Difference left_positive left_negative)
+  (Difference right_positive right_negative)
   evidence =
     equality_to_truth
       (natural_order_to_true
@@ -136,13 +139,13 @@ difference_order_reflexive (Difference _ _) = natural_order_reflexive _
 
 public export
 difference_order_antisymmetric :
-  {left, right : SignedDifference} →
+  (left, right : SignedDifference) →
   DifferenceOrder left right →
   DifferenceOrder right left →
   DifferenceEquivalent left right
 difference_order_antisymmetric
-  {left = Difference _ _}
-  {right = Difference _ _}
+  (Difference _ _)
+  (Difference _ _)
   left_to_right
   right_to_left =
     natural_order_antisymmetric left_to_right right_to_left
@@ -151,18 +154,18 @@ difference_order_antisymmetric
 -- by a universal interval-addition enclosure proof.
 public export
 difference_add_order :
-  {first_left, first_right : SignedDifference} →
-  {second_left, second_right : SignedDifference} →
+  (first_left, first_right : SignedDifference) →
+  (second_left, second_right : SignedDifference) →
   DifferenceOrder first_left first_right →
   DifferenceOrder second_left second_right →
   DifferenceOrder
     (add_difference first_left second_left)
     (add_difference first_right second_right)
 difference_add_order
-  {first_left = Difference _ _}
-  {first_right = Difference _ _}
-  {second_left = Difference _ _}
-  {second_right = Difference _ _}
+  (Difference _ _)
+  (Difference _ _)
+  (Difference _ _)
+  (Difference _ _)
   first_order
   second_order =
     cross_sum_add_order first_order second_order
@@ -170,12 +173,12 @@ difference_add_order
 -- Negation reverses the signed order.
 public export
 difference_negate_reverses_order :
-  {left, right : SignedDifference} →
+  (left, right : SignedDifference) →
   DifferenceOrder left right →
   DifferenceOrder (negate_difference right) (negate_difference left)
 difference_negate_reverses_order
-  {left = Difference _ _}
-  {right = Difference _ _}
+  (Difference _ _)
+  (Difference _ _)
   ordered =
     cross_sum_negate_order ordered
 
@@ -183,32 +186,38 @@ difference_negate_reverses_order
 public export
 difference_scale_order :
   (factor : Number) →
-  {left, right : SignedDifference} →
+  (left, right : SignedDifference) →
   DifferenceOrder left right →
   DifferenceOrder
     (scale_difference factor left)
     (scale_difference factor right)
-difference_scale_order Z ordered =
+difference_scale_order Z left right ordered =
   difference_order_reflexive difference_zero
-difference_scale_order (S factor) ordered =
-  difference_add_order ordered (difference_scale_order factor ordered)
+difference_scale_order (S factor) left right ordered =
+  difference_add_order
+    left
+    right
+    (scale_difference factor left)
+    (scale_difference factor right)
+    ordered
+    (difference_scale_order factor left right ordered)
 
 -- Addition respects semantic equality even though the pair representation is
 -- intentionally noncanonical.
 public export
 difference_add_respects_equivalent :
-  {first_left, first_right : SignedDifference} →
-  {second_left, second_right : SignedDifference} →
+  (first_left, first_right : SignedDifference) →
+  (second_left, second_right : SignedDifference) →
   DifferenceEquivalent first_left first_right →
   DifferenceEquivalent second_left second_right →
   DifferenceEquivalent
     (add_difference first_left second_left)
     (add_difference first_right second_right)
 difference_add_respects_equivalent
-  {first_left = Difference _ _}
-  {first_right = Difference _ _}
-  {second_left = Difference _ _}
-  {second_right = Difference _ _}
+  (Difference _ _)
+  (Difference _ _)
+  (Difference _ _)
+  (Difference _ _)
   first_equal
   second_equal =
     cross_sum_add_equivalent first_equal second_equal
