@@ -1,94 +1,218 @@
 module Interval.Check
 
+import Data.So
 import Interval.Exact
 
 %unbound_implicits off
 
--- Every equality ending in Refl must be checked by Idris, not merely printed.
+-- Every equality ending in Refl is checked by Idriç, not merely printed.
+
 plus_closed :
   interval_equal
-    (add_interval (closed_interval (whole 1) (whole 3))
-                 (closed_interval (whole 4) (whole 9)))
+    (add_interval
+      (closed_interval (whole 1) (whole 3))
+      (closed_interval (whole 4) (whole 9)))
     (closed_interval (whole 5) (whole 12)) = True
 plus_closed = Refl
 
 plus_open :
   interval_equal
-    (add_interval (right_open_interval (whole 1) (whole 3))
-                 (left_open_interval (whole 4) (whole 9)))
+    (add_interval
+      (right_open_interval (whole 1) (whole 3))
+      (left_open_interval (whole 4) (whole 9)))
     (open_interval (whole 5) (whole 12)) = True
 plus_open = Refl
 
 subtract_extremes :
   interval_equal
-    (subtract_interval (closed_interval (whole 1) (whole 3))
-                      (closed_interval (whole 4) (whole 9)))
+    (subtract_interval
+      (closed_interval (whole 1) (whole 3))
+      (closed_interval (whole 4) (whole 9)))
     (closed_interval (whole (-8)) (whole (-1))) = True
 subtract_extremes = Refl
 
 -- Explicit record of the dependency problem, not a false proof of x-x=0.
 dependency_is_lost :
   interval_equal
-    (subtract_interval (closed_interval (whole 0) (whole 1))
-                      (closed_interval (whole 0) (whole 1)))
+    (subtract_interval
+      (closed_interval (whole 0) (whole 1))
+      (closed_interval (whole 0) (whole 1)))
     (closed_interval (whole (-1)) (whole 1)) = True
 dependency_is_lost = Refl
 
 empty_open_singleton :
-  interval_equal (open_interval (whole 1) (whole 1)) no_points = True
+  interval_equal
+    (open_interval (whole 1) (whole 1))
+    no_points = True
 empty_open_singleton = Refl
 
 empty_inverted :
-  interval_equal (closed_interval (whole 3) (whole 1)) no_points = True
+  interval_equal
+    (closed_interval (whole 3) (whole 1))
+    no_points = True
 empty_inverted = Refl
 
 open_lower_not_member :
-  contains (left_open_interval (whole 1) (whole 3)) (whole 1) = False
+  contains
+    (left_open_interval (whole 1) (whole 3))
+    (whole 1) = False
 open_lower_not_member = Refl
 
 closed_lower_member :
-  contains (closed_interval (whole 1) (whole 3)) (whole 1) = True
+  contains
+    (closed_interval (whole 1) (whole 3))
+    (whole 1) = True
 closed_lower_member = Refl
 
 open_right_not_member :
-  contains (right_open_interval (whole 1) (whole 3)) (whole 3) = False
+  contains
+    (right_open_interval (whole 1) (whole 3))
+    (whole 3) = False
 open_right_not_member = Refl
 
 unbounded_contains_negative :
-  contains (below (whole 4) excluded) (whole (-100)) = True
+  contains
+    (below (whole 4) excluded)
+    (whole (-100)) = True
 unbounded_contains_negative = Refl
 
 unbounded_excludes_endpoint :
-  contains (below (whole 4) excluded) (whole 4) = False
+  contains
+    (below (whole 4) excluded)
+    (whole 4) = False
 unbounded_excludes_endpoint = Refl
 
 empty_absorbs_addition :
-  interval_equal (add_interval no_points Interval.Exact.all_numbers) no_points = True
+  interval_equal
+    (add_interval no_points Interval.Exact.all_numbers)
+    no_points = True
 empty_absorbs_addition = Refl
 
 opposite_infinite_rays_sum_all :
-  interval_equal (add_interval (above (whole 0) included)
-                              (below (whole 0) included))
-                Interval.Exact.all_numbers = True
+  interval_equal
+    (add_interval
+      (above (whole 0) included)
+      (below (whole 0) included))
+    Interval.Exact.all_numbers = True
 opposite_infinite_rays_sum_all = Refl
 
 intersection_open_boundary_empty :
-  interval_equal (intersect_interval (closed_interval (whole 0) (whole 1))
-                                   (left_open_interval (whole 1) (whole 2)))
-                no_points = True
+  interval_equal
+    (intersect_interval
+      (closed_interval (whole 0) (whole 1))
+      (left_open_interval (whole 1) (whole 2)))
+    no_points = True
 intersection_open_boundary_empty = Refl
 
 intersection_singleton :
-  interval_equal (intersect_interval (closed_interval (whole 0) (whole 1))
-                                   (closed_interval (whole 1) (whole 2)))
-                (closed_interval (whole 1) (whole 1)) = True
+  interval_equal
+    (intersect_interval
+      (closed_interval (whole 0) (whole 1))
+      (closed_interval (whole 1) (whole 2)))
+    (closed_interval (whole 1) (whole 1)) = True
 intersection_singleton = Refl
 
 exact_quarters :
-  rational_equal (add_rational (over 1 (OnePlus 3)) (over 1 (OnePlus 3)))
-           (over 1 (OnePlus 1)) = True
+  rational_equal
+    (add_rational
+      (over 1 (OnePlus 3))
+      (over 1 (OnePlus 3)))
+    (over 1 (OnePlus 1)) = True
 exact_quarters = Refl
 
+-- A public direct construction is possible only with ordering evidence.
+manual_strict_span : exact_interval
+manual_strict_span =
+  points_between
+    (MkValidatedSpan
+      (lower_at (whole 0) included)
+      (upper_at (whole 1) included)
+      (StrictlyOrdered Oh))
+
+manual_strict_span_matches_constructor :
+  interval_equal
+    manual_strict_span
+    (closed_interval (whole 0) (whole 1)) = True
+manual_strict_span_matches_constructor = Refl
+
+manual_closed_singleton : exact_interval
+manual_closed_singleton =
+  points_between
+    (MkValidatedSpan
+      (lower_at (whole 2) included)
+      (upper_at (whole 2) included)
+      (ClosedSingleton Oh))
+
+manual_closed_singleton_is_member :
+  contains manual_closed_singleton (whole 2) = True
+manual_closed_singleton_is_member = Refl
+
+-- General reductions over arbitrary values, rather than one numerical fixture.
+
+empty_contains_nothing :
+  (value : ExactRational) →
+  contains no_points value = False
+empty_contains_nothing value = Refl
+
+all_numbers_contains_everything :
+  (value : ExactRational) →
+  contains Interval.Exact.all_numbers value = True
+all_numbers_contains_everything value = Refl
+
+empty_addition_left :
+  (interval : exact_interval) →
+  interval_equal
+    (add_interval no_points interval)
+    no_points = True
+empty_addition_left interval = Refl
+
+empty_addition_right :
+  (interval : exact_interval) →
+  interval_equal
+    (add_interval interval no_points)
+    no_points = True
+empty_addition_right no_points = Refl
+empty_addition_right (points_between span) = Refl
+
+empty_intersection_left :
+  (interval : exact_interval) →
+  interval_equal
+    (intersect_interval no_points interval)
+    no_points = True
+empty_intersection_left interval = Refl
+
+empty_intersection_right :
+  (interval : exact_interval) →
+  interval_equal
+    (intersect_interval interval no_points)
+    no_points = True
+empty_intersection_right no_points = Refl
+empty_intersection_right (points_between span) = Refl
+
+negate_empty :
+  interval_equal
+    (negate_interval no_points)
+    no_points = True
+negate_empty = Refl
+
+open_empty_left :
+  interval_equal
+    (open_left no_points)
+    no_points = True
+open_empty_left = Refl
+
+open_empty_right :
+  interval_equal
+    (open_right no_points)
+    no_points = True
+open_empty_right = Refl
+
+stored_span_has_validity :
+  (span : ValidatedSpan) →
+  ValidSpan
+    (lower_boundary span)
+    (upper_boundary span)
+stored_span_has_validity (MkValidatedSpan _ _ proof) = proof
 
 main : IO ()
-main = putStrLn "Idriç exact rational interval checks: PASS"
+main = putStrLn "Idriç proof-carrying interval checks: PASS"
