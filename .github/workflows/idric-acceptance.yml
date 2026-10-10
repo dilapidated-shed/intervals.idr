@@ -7,11 +7,13 @@ on:
     paths:
       - 'idric/**'
       - 'intervals-idric.ipkg'
+      - 'intervals-idric-rejected.ipkg'
       - '.github/workflows/idric-acceptance.yml'
   pull_request:
     paths:
       - 'idric/**'
       - 'intervals-idric.ipkg'
+      - 'intervals-idric-rejected.ipkg'
       - '.github/workflows/idric-acceptance.yml'
 
 concurrency:
@@ -77,6 +79,28 @@ jobs:
           export IDRIS2_DATA="$idric_hidden/support"
           export IDRIS2_LIBS="$idric_hidden/support/c"
           "$idric_hidden/build/exec/idris2" --build intervals-idric.ipkg
+
+      - name: Reject a reversed direct span without ordering evidence
+        shell: bash
+        run: |
+          idric_hidden="$GITHUB_WORKSPACE/.toolchain/idric/_"
+          export PATH="$idric_hidden/.tools/bin:$PATH"
+          export IDRIS2_PATH="$idric_hidden/libs/prelude/build/ttc:$idric_hidden/libs/base/build/ttc:$idric_hidden/libs/linear/build/ttc:$idric_hidden/libs/network/build/ttc:$idric_hidden/libs/contrib/build/ttc:$idric_hidden/libs/test/build/ttc"
+          export IDRIS2_DATA="$idric_hidden/support"
+          export IDRIS2_LIBS="$idric_hidden/support/c"
+
+          set +e
+          "$idric_hidden/build/exec/idris2" --build intervals-idric-rejected.ipkg >rejected-span.log 2>&1
+          status=$?
+          set -e
+          cat rejected-span.log
+
+          if [ "$status" -eq 0 ]; then
+            echo 'FAIL: reversed points_between span unexpectedly typechecked' >&2
+            exit 1
+          fi
+
+          grep -Eq 'So False|True and False|False and True|StrictlyOrdered' rejected-span.log
 
       - name: Run the Idriç checked fixture
         run: ./build/exec/interval-idric-tests
