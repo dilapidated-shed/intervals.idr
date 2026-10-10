@@ -42,10 +42,13 @@ subtract_difference : SignedDifference → SignedDifference → SignedDifference
 subtract_difference left right =
   add_difference left (negate_difference right)
 
+-- Scaling is repeated addition. This makes its order proof structural rather
+-- than dependent on a separate multiplication-distribution theorem.
 public export
 scale_difference : Number → SignedDifference → SignedDifference
-scale_difference factor (Difference positive negative) =
-  Difference (factor × positive) (factor × negative)
+scale_difference Z value = difference_zero
+scale_difference (S factor) value =
+  add_difference value (scale_difference factor value)
 
 -- `(p − n)(q − m) = (pq + nm) − (pm + nq)`.
 public export
@@ -129,7 +132,7 @@ public export
 difference_order_reflexive :
   (value : SignedDifference) →
   DifferenceOrder value value
-difference_order_reflexive (Difference _ _) = natural_order_reflexive
+difference_order_reflexive (Difference _ _) = natural_order_reflexive _
 
 public export
 difference_order_antisymmetric :
@@ -176,7 +179,7 @@ difference_negate_reverses_order
   ordered =
     cross_sum_negate_order ordered
 
--- Multiplication by a nonnegative whole factor is monotone, including zero.
+-- Repeated addition by a nonnegative whole factor preserves order.
 public export
 difference_scale_order :
   (factor : Number) →
@@ -185,12 +188,10 @@ difference_scale_order :
   DifferenceOrder
     (scale_difference factor left)
     (scale_difference factor right)
-difference_scale_order
-  factor
-  {left = Difference _ _}
-  {right = Difference _ _}
-  ordered =
-    cross_sum_scale_order factor ordered
+difference_scale_order Z ordered =
+  difference_order_reflexive difference_zero
+difference_scale_order (S factor) ordered =
+  difference_add_order ordered (difference_scale_order factor ordered)
 
 -- Addition respects semantic equality even though the pair representation is
 -- intentionally noncanonical.

@@ -1,0 +1,237 @@
+module Interval.NaturalProofs
+
+import Data.So
+import Syntax.PreorderReasoning
+
+%unbound_implicits off
+
+-- Proof-level order for Idriç Number. This is implemented directly rather than
+-- importing inherited source vocabulary into maintained Idriç modules.
+public export
+NaturalOrder : Number → Number → Type
+NaturalOrder = LTE
+
+public export
+truth_to_equality : {condition : Bool} → So condition → condition = True
+truth_to_equality Oh = Refl
+
+public export
+equality_to_truth : {condition : Bool} → condition = True → So condition
+equality_to_truth Refl = Oh
+
+public export
+natural_order : Number → Number → Bool
+natural_order Z _ = True
+natural_order (S _) Z = False
+natural_order (S left) (S right) = natural_order left right
+
+public export
+natural_order_from_true :
+  (left, right : Number) →
+  natural_order left right = True →
+  NaturalOrder left right
+natural_order_from_true Z right _ = LTEZero
+natural_order_from_true (S left) Z evidence impossible
+natural_order_from_true (S left) (S right) evidence =
+  LTESucc (natural_order_from_true left right evidence)
+
+public export
+natural_order_to_true :
+  (left, right : Number) →
+  NaturalOrder left right →
+  natural_order left right = True
+natural_order_to_true Z right LTEZero = Refl
+natural_order_to_true (S left) (S right) (LTESucc evidence) =
+  natural_order_to_true left right evidence
+
+public export
+successor_not_below_zero :
+  {value : Number} → NaturalOrder (S value) Z → Void
+successor_not_below_zero evidence impossible
+
+public export
+successor_order_refutation :
+  {left, right : Number} →
+  (NaturalOrder left right → Void) →
+  NaturalOrder (S left) (S right) →
+  Void
+successor_order_refutation refutation (LTESucc evidence) =
+  refutation evidence
+
+public export
+decide_natural_order :
+  (left, right : Number) →
+  Dec (NaturalOrder left right)
+decide_natural_order Z right = Yes LTEZero
+decide_natural_order (S left) Z = No successor_not_below_zero
+decide_natural_order (S left) (S right) =
+  case decide_natural_order left right of
+    Yes evidence => Yes (LTESucc evidence)
+    No refutation => No (successor_order_refutation refutation)
+
+public export
+natural_order_reflexive :
+  (value : Number) → NaturalOrder value value
+natural_order_reflexive Z = LTEZero
+natural_order_reflexive (S value) =
+  LTESucc (natural_order_reflexive value)
+
+public export
+natural_order_step :
+  {left, right : Number} →
+  NaturalOrder left right →
+  NaturalOrder left (S right)
+natural_order_step LTEZero = LTEZero
+natural_order_step (LTESucc evidence) =
+  LTESucc (natural_order_step evidence)
+
+public export
+natural_order_transitive :
+  {first, second, third : Number} →
+  NaturalOrder first second →
+  NaturalOrder second third →
+  NaturalOrder first third
+natural_order_transitive LTEZero _ = LTEZero
+natural_order_transitive (LTESucc first_order) (LTESucc second_order) =
+  LTESucc (natural_order_transitive first_order second_order)
+
+public export
+natural_order_antisymmetric :
+  {left, right : Number} →
+  NaturalOrder left right →
+  NaturalOrder right left →
+  left = right
+natural_order_antisymmetric {left = Z} {right = Z} _ _ = Refl
+natural_order_antisymmetric {left = Z} {right = S right} LTEZero reverse impossible
+natural_order_antisymmetric {left = S left} {right = Z} forward _ impossible
+natural_order_antisymmetric
+  {left = S left}
+  {right = S right}
+  (LTESucc left_to_right)
+  (LTESucc right_to_left) =
+    cong S (natural_order_antisymmetric left_to_right right_to_left)
+
+public export
+natural_plus_zero_right :
+  (value : Number) → value + 0 = value
+natural_plus_zero_right Z = Refl
+natural_plus_zero_right (S value) =
+  cong S (natural_plus_zero_right value)
+
+public export
+natural_plus_successor_right :
+  (left, right : Number) → left + S right = S (left + right)
+natural_plus_successor_right Z right = Refl
+natural_plus_successor_right (S left) right =
+  cong S (natural_plus_successor_right left right)
+
+public export
+natural_plus_associative :
+  (first, second, third : Number) →
+  (first + second) + third = first + (second + third)
+natural_plus_associative Z second third = Refl
+natural_plus_associative (S first) second third =
+  cong S (natural_plus_associative first second third)
+
+public export
+natural_plus_commutative :
+  (left, right : Number) → left + right = right + left
+natural_plus_commutative Z right =
+  sym (natural_plus_zero_right right)
+natural_plus_commutative (S left) right =
+  rewrite natural_plus_successor_right right left in
+  cong S (natural_plus_commutative left right)
+
+public export
+natural_right_below_sum :
+  (left, right : Number) →
+  NaturalOrder right (left + right)
+natural_right_below_sum Z right = natural_order_reflexive right
+natural_right_below_sum (S left) right =
+  natural_order_step (natural_right_below_sum left right)
+
+public export
+natural_plus_order :
+  {first_left, first_right : Number} →
+  {second_left, second_right : Number} →
+  NaturalOrder first_left first_right →
+  NaturalOrder second_left second_right →
+  NaturalOrder
+    (first_left + second_left)
+    (first_right + second_right)
+natural_plus_order
+  {first_left = Z}
+  {first_right}
+  {second_right}
+  LTEZero
+  second_order =
+    natural_order_transitive
+      second_order
+      (natural_right_below_sum first_right second_right)
+natural_plus_order
+  {first_left = S first_left}
+  {first_right = S first_right}
+  (LTESucc first_order)
+  second_order =
+    LTESucc (natural_plus_order first_order second_order)
+
+-- (a+b)+(c+d) = (a+c)+(b+d).
+public export
+natural_plus_shuffle :
+  (first, second, third, fourth : Number) →
+  (first + second) + (third + fourth) =
+  (first + third) + (second + fourth)
+natural_plus_shuffle first second third fourth = Calc $
+  |~ (first + second) + (third + fourth)
+  ~~ first + (second + (third + fourth))
+       ...(natural_plus_associative first second (third + fourth))
+  ~~ first + ((second + third) + fourth)
+       ...(cong (first +) (sym (natural_plus_associative second third fourth)))
+  ~~ first + ((third + second) + fourth)
+       ...(cong (first +) (cong (+ fourth) (natural_plus_commutative second third)))
+  ~~ first + (third + (second + fourth))
+       ...(cong (first +) (natural_plus_associative third second fourth))
+  ~~ (first + third) + (second + fourth)
+       ...(sym (natural_plus_associative first third (second + fourth)))
+
+-- If a-d <= c-b and e-h <= g-f, then (a+e)-(d+h) <= (c+g)-(b+f).
+public export
+cross_sum_add_order :
+  {a, b, c, d, e, f, g, h : Number} →
+  NaturalOrder (a + d) (c + b) →
+  NaturalOrder (e + h) (g + f) →
+  NaturalOrder ((a + e) + (d + h)) ((c + g) + (b + f))
+cross_sum_add_order
+  {a} {b} {c} {d} {e} {f} {g} {h}
+  first_order
+  second_order =
+    rewrite natural_plus_shuffle a e d h in
+    rewrite sym (natural_plus_shuffle c b g f) in
+    natural_plus_order first_order second_order
+
+-- Negating both formal differences reverses their order.
+public export
+cross_sum_negate_order :
+  {a, b, c, d : Number} →
+  NaturalOrder (a + d) (c + b) →
+  NaturalOrder (d + a) (b + c)
+cross_sum_negate_order {a} {b} {c} {d} ordered =
+  rewrite natural_plus_commutative d a in
+  rewrite natural_plus_commutative b c in
+  ordered
+
+-- Addition respects cross-sum semantic equality.
+public export
+cross_sum_add_equivalent :
+  {a, b, c, d, e, f, g, h : Number} →
+  a + d = c + b →
+  e + h = g + f →
+  (a + e) + (d + h) = (c + g) + (b + f)
+cross_sum_add_equivalent
+  {a} {b} {c} {d} {e} {f} {g} {h}
+  first_equal
+  second_equal = Calc $
+    |~ (a + e) + (d + h)
+    ~~ (a + d) + (e + h) ...(natural_plus_shuffle a e d h)
+    ~~ (c + b) + (g + f) ...(cong2 (+) first_equal second_equal)
+    ~~ (c + g) + (b + f) ...(natural_plus_shuffle c b g f)
