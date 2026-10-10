@@ -1,0 +1,167 @@
+module Interval.DivisionCheck
+
+import Interval.Division
+import Interval.Exact
+import Interval.Product
+import Interval.Reciprocal
+import Interval.Relation
+
+%unbound_implicits off
+
+one_half : ExactRational
+one_half = over 1 (OnePlus 1)
+
+negative_one : ExactRational
+negative_one = whole (-1)
+
+positive_away_from_zero :
+  same_division_result
+    (divide_intervals
+      (closed_interval (whole 2) (whole 4))
+      (closed_interval (whole 1) (whole 2)))
+    (division_connected
+      (closed_interval (whole 1) (whole 4))) = True
+positive_away_from_zero = Refl
+
+open_numerator_boundary :
+  same_division_result
+    (divide_intervals
+      (left_open_interval (whole 2) (whole 4))
+      (closed_interval (whole 1) (whole 2)))
+    (division_connected
+      (left_open_interval (whole 1) (whole 4))) = True
+open_numerator_boundary = Refl
+
+negative_denominator :
+  same_division_result
+    (divide_intervals
+      (closed_interval (whole 2) (whole 4))
+      (closed_interval (whole (-2)) (whole (-1))))
+    (division_connected
+      (closed_interval (whole (-4)) negative_one)) = True
+negative_denominator = Refl
+
+positive_denominator_from_zero :
+  same_division_result
+    (divide_intervals
+      (closed_interval (whole 2) (whole 4))
+      (closed_interval (whole 0) (whole 2)))
+    (division_connected
+      (above (whole 1) included)) = True
+positive_denominator_from_zero = Refl
+
+negative_denominator_to_zero :
+  same_division_result
+    (divide_intervals
+      (closed_interval (whole 2) (whole 4))
+      (closed_interval (whole (-2)) (whole 0)))
+    (division_connected
+      (below negative_one included)) = True
+negative_denominator_to_zero = Refl
+
+positive_numerator_crossing_divisor :
+  same_division_result
+    (divide_intervals
+      (closed_interval (whole 1) (whole 2))
+      (closed_interval (whole (-1)) (whole 1)))
+    (division_split
+      (below negative_one included)
+      (above (whole 1) included)) = True
+positive_numerator_crossing_divisor = Refl
+
+-- The two product rays meet at zero, so normalization returns the whole line.
+nonnegative_numerator_crossing_divisor :
+  same_division_result
+    (divide_intervals
+      (closed_interval (whole 0) (whole 1))
+      (closed_interval (whole (-1)) (whole 1)))
+    (division_connected Interval.Exact.all_numbers) = True
+nonnegative_numerator_crossing_divisor = Refl
+
+mixed_numerator_crossing_divisor :
+  same_division_result
+    (divide_intervals
+      (closed_interval (whole (-1)) (whole 1))
+      (closed_interval (whole (-1)) (whole 1)))
+    (division_connected Interval.Exact.all_numbers) = True
+mixed_numerator_crossing_divisor = Refl
+
+zero_numerator_crossing_divisor :
+  same_division_result
+    (divide_intervals
+      (closed_interval (whole 0) (whole 0))
+      (closed_interval (whole (-1)) (whole 1)))
+    (division_connected
+      (closed_interval (whole 0) (whole 0))) = True
+zero_numerator_crossing_divisor = Refl
+
+zero_divisor_has_no_quotients :
+  same_division_result
+    (divide_intervals
+      (closed_interval (whole 1) (whole 2))
+      (closed_interval (whole 0) (whole 0)))
+    division_empty = True
+zero_divisor_has_no_quotients = Refl
+
+empty_divisor_has_no_quotients :
+  same_division_result
+    (divide_intervals
+      (closed_interval (whole 1) (whole 2))
+      no_points)
+    division_empty = True
+empty_divisor_has_no_quotients = Refl
+
+empty_numerator_has_no_quotients :
+  same_division_result
+    (divide_intervals
+      no_points
+      (closed_interval (whole 1) (whole 2)))
+    division_empty = True
+empty_numerator_has_no_quotients = Refl
+
+unbounded_divisor_is_deferred :
+  same_division_result
+    (divide_intervals
+      (closed_interval (whole 1) (whole 2))
+      Interval.Exact.all_numbers)
+    division_deferred = True
+unbounded_divisor_is_deferred = Refl
+
+-- Normalization distinguishes adjacency from an actual missing point.
+touching_half_open_components_merge :
+  same_division_result
+    (normalize_interval_pair
+      (right_open_interval (whole 0) (whole 1))
+      (closed_interval (whole 1) (whole 2)))
+    (division_connected
+      (closed_interval (whole 0) (whole 2))) = True
+touching_half_open_components_merge = Refl
+
+touching_open_components_stay_split :
+  same_division_result
+    (normalize_interval_pair
+      (open_interval (whole 0) (whole 1))
+      (open_interval (whole 1) (whole 2)))
+    (division_split
+      (open_interval (whole 0) (whole 1))
+      (open_interval (whole 1) (whole 2))) = True
+touching_open_components_stay_split = Refl
+
+overlapping_components_merge :
+  same_division_result
+    (normalize_interval_pair
+      (closed_interval (whole 0) (whole 2))
+      (closed_interval (whole 1) (whole 3)))
+    (division_connected
+      (closed_interval (whole 0) (whole 3))) = True
+overlapping_components_merge = Refl
+
+reverse_order_components_are_normalized :
+  same_division_result
+    (normalize_interval_pair
+      (closed_interval (whole 3) (whole 4))
+      (closed_interval (whole 1) (whole 2)))
+    (division_split
+      (closed_interval (whole 1) (whole 2))
+      (closed_interval (whole 3) (whole 4))) = True
+reverse_order_components_are_normalized = Refl
