@@ -39,7 +39,7 @@ natural_order_from_true :
   natural_order left right = True →
   NaturalOrder left right
 natural_order_from_true Z right _ = ZeroBelow
-natural_order_from_true (S left) Z evidence impossible
+natural_order_from_true (S _) Z _ impossible
 natural_order_from_true (S left) (S right) evidence =
   SuccessorsOrdered (natural_order_from_true left right evidence)
 
@@ -58,7 +58,7 @@ natural_order_to_true
 public export
 successor_not_below_zero :
   {value : Number} → NaturalOrder (S value) Z → Void
-successor_not_below_zero evidence impossible
+successor_not_below_zero _ impossible
 
 public export
 successor_order_refutation :
@@ -124,13 +124,13 @@ natural_order_antisymmetric
   ZeroBelow = Refl
 natural_order_antisymmetric
   {left = Z}
-  {right = S right}
+  {right = S _}
   ZeroBelow
-  reverse_order impossible
+  _ impossible
 natural_order_antisymmetric
-  {left = S left}
+  {left = S _}
   {right = Z}
-  forward_order
+  _
   ZeroBelow impossible
 natural_order_antisymmetric
   {left = S left}
