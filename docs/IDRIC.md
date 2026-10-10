@@ -1,28 +1,21 @@
-# Idriç integration contract (not compiled Idriç source)
+# Idriç integration
 
-This repository began with an empty notebook in August 2026. By October, the maintained Idriç source grammar, numerical widths, `≟` equality, `Number`, `Text`, explicit `÷`, direct backends, and acceptance boundaries had substantially changed. The exact core is therefore kept in an ordinary `.idr` Idris 2 compatibility module; it is **not** passed off as present-day Idriç `.idric` code.
+The maintained implementation now lives directly in:
 
-## Proposed semantic surface
+- [`idric/Interval/Exact.idric`](../idric/Interval/Exact.idric)
+- [`idric/Interval/Check.idric`](../idric/Interval/Check.idric)
+- [`intervals-idric.ipkg`](../intervals-idric.ipkg)
 
-The language-facing intention, not a claimed parser fixture:
+See [`IDRIC-PRIMARY.md`](IDRIC-PRIMARY.md) for the language and API boundary and [`IDRIC-COMPILER-RECEIPT.md`](IDRIC-COMPILER-RECEIPT.md) for the pinned compiler acceptance contract.
 
-```idric
--- Source spellings are provisional.  Semantic relationships are the contract.
-interval_of possible_values between lower and upper
-known_bound ← bound with provenance from observation
-missing_bound ← unresolved because calibration_not_established
+The old proposal in this file mixed interval mathematics with a broader provenance and missing-knowledge system. That is no longer the direction of this repository. Intervals remain a useful special-purpose type, comparable to units of measure.
 
-sum_of_bounds ≝ add bounds from first_input to second_input
-```
+Future Idriç integration should preserve these relationships:
 
-A future Idriç `.idric` integration must tie the following into its checked core:
+- an eventual generic `Interval (Quantity dimension)` keeps the dimension in the endpoint type;
+- addition accepts intervals over the same additive quantity type;
+- Float16 and Float32 interval operations require real outward rounding;
+- `x−x` must not gain a correlation-aware simplification unless expression identity or another justified dependency mechanism is present;
+- host Idris 2, Python, reference implementations, or a fallback backend cannot substitute for a claimed Idriç or target-backend execution.
 
-- `Interval (Quantity dimension)`: addition takes two intervals of the **same** dimension and returns that dimension; unlike quantities cannot be added.
-- `NoBounds`: an epistemic missing state; not a numeric zero, `NoPoints`, a full interval or a distribution.
-- `Provenance`: source identities retained through operations and invalidation/replay of source-derived reports.
-- `contains`/subsetting and physical assertions: keep truth/evidence status distinct from machine `Bool` when observation/model ambiguity matters.
-- `Interval Float16` / `Interval Float32`: provide checked directed-rounding kernels before claiming any enclosing result.
-- Expression correlation: `x−x` must not be simplified from naive interval subtraction until source identity and expression-equality proofs make that justified.
-- No substitution of Idris, Python, RefC, host floating point, or a reference result for an Idriç backend execution.
-
-Current language authority: [Idriç STYLE.md](https://github.com/isomorphisms/Idric/blob/Idri%C3%A7/STYLE.md), [Idriç interval issue](https://github.com/isomorphisms/Idric/issues/30), and the [units/time/interval fixture](https://github.com/isomorphisms/Idric/blob/Idri%C3%A7/_/examples/units-time-intervals/UnitsTimeIntervals.idric).
+Current language authority: [Idriç STYLE.md](https://github.com/isomorphisms/Idric/blob/Idri%C3%A7/STYLE.md), [Idriç issue #30](https://github.com/isomorphisms/Idric/issues/30), and the [units/time/interval fixture](https://github.com/isomorphisms/Idric/blob/Idri%C3%A7/_/examples/units-time-intervals/UnitsTimeIntervals.idric).
