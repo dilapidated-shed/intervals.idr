@@ -39,6 +39,19 @@ monotone_sum_boolean :
 monotone_sum_boolean =
   truth_to_equality (difference_order_boolean monotone_sum_evidence)
 
+-- The monotonicity proof is genuinely open in all four signed values; it is
+-- not merely the closed arithmetic example above.
+addition_monotone_open :
+  {first_left, first_right : SignedDifference} →
+  {second_left, second_right : SignedDifference} →
+  DifferenceOrder first_left first_right →
+  DifferenceOrder second_left second_right →
+  DifferenceOrder
+    (add_difference first_left second_left)
+    (add_difference first_right second_right)
+addition_monotone_open first_order second-order =
+  difference_add_order first_order second-order
+
 -- Negating -3 ≤ -1 gives 1 ≤ 3.
 negation_reverses_order :
   DifferenceOrder
