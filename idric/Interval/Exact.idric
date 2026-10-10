@@ -96,8 +96,9 @@ choice upper_bound one_of
   upper_at ExactRational endpoint_membership
   unbounded_above
 
--- Evidence that two bounds describe a nonempty interval. The evidence fields
--- are erased: they constrain construction without becoming runtime payload.
+-- Evidence that two bounds describe a nonempty interval. The first checked
+-- version keeps proofs as ordinary fields; proof erasure is a later compiler
+-- representation question and is not required for the mathematical invariant.
 public export
 data ValidBounds : lower_bound → upper_bound → Type where
   WholeLine : ValidBounds unbounded_below unbounded_above
@@ -112,11 +113,11 @@ data ValidBounds : lower_bound → upper_bound → Type where
   StrictFinite :
     {lower, upper : ExactRational} →
     {lower_kind, upper_kind : endpoint_membership} →
-    (0 proof : So (rational_less lower upper)) →
+    (proof : So (rational_less lower upper)) →
     ValidBounds (lower_at lower lower_kind) (upper_at upper upper_kind)
   EqualClosed :
     {lower, upper : ExactRational} →
-    (0 proof : So (rational_equal lower upper)) →
+    (proof : So (rational_equal lower upper)) →
     ValidBounds (lower_at lower included) (upper_at upper included)
 
 public export
@@ -124,7 +125,7 @@ data ValidatedSpan : Type where
   Span :
     (lower : lower_bound) →
     (upper : upper_bound) →
-    (0 validity : ValidBounds lower upper) →
+    (validity : ValidBounds lower upper) →
     ValidatedSpan
 
 -- A nonempty interval now contains only a validated span. Clients may construct
