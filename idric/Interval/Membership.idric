@@ -22,7 +22,10 @@ data IntervalMember : ExactRational → exact_interval → Type where
 -- predicate used by ordinary callers.
 public export
 member_implies_contains :
-  IntervalMember value interval → So (contains interval value)
+  {value : ExactRational} →
+  {interval : exact_interval} →
+  IntervalMember value interval →
+  So (contains interval value)
 member_implies_contains (InsideSpan lower_evidence upper_evidence) =
   andSo (lower_evidence, upper_evidence)
 
@@ -44,16 +47,24 @@ contains_implies_member
         InsideSpan lower_evidence upper_evidence
 
 public export
-empty_has_no_members : IntervalMember value no_points → Void
+empty_has_no_members :
+  {value : ExactRational} →
+  IntervalMember value no_points →
+  Void
 empty_has_no_members membership impossible
 
 public export
 member_interval_is_not_empty :
-  IntervalMember value interval → interval_equal interval no_points = False
+  {value : ExactRational} →
+  {interval : exact_interval} →
+  IntervalMember value interval →
+  interval_equal interval no_points = False
 member_interval_is_not_empty (InsideSpan _ _) = Refl
 
 public export
 membership_refutes_failed_contains :
+  {value : ExactRational} →
+  {interval : exact_interval} →
   (So (contains interval value) → Void) →
   IntervalMember value interval →
   Void
