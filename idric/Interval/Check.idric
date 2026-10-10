@@ -1,36 +1,37 @@
 module Interval.Check
 
+import Data.So
 import Interval.Exact
 
 %unbound_implicits off
 
--- Every equality ending in Refl must be checked by Idris, not merely printed.
+-- Every equality ending in Refl must be checked by Idriç, not merely printed.
 plus_closed :
   interval_equal
     (add_interval (closed_interval (whole 1) (whole 3))
-                 (closed_interval (whole 4) (whole 9)))
+                  (closed_interval (whole 4) (whole 9)))
     (closed_interval (whole 5) (whole 12)) = True
 plus_closed = Refl
 
 plus_open :
   interval_equal
     (add_interval (right_open_interval (whole 1) (whole 3))
-                 (left_open_interval (whole 4) (whole 9)))
+                  (left_open_interval (whole 4) (whole 9)))
     (open_interval (whole 5) (whole 12)) = True
 plus_open = Refl
 
 subtract_extremes :
   interval_equal
     (subtract_interval (closed_interval (whole 1) (whole 3))
-                      (closed_interval (whole 4) (whole 9)))
+                       (closed_interval (whole 4) (whole 9)))
     (closed_interval (whole (-8)) (whole (-1))) = True
 subtract_extremes = Refl
 
--- Explicit record of the dependency problem, not a false proof of x-x=0.
+-- Explicit record of the dependency problem, not a false proof of x−x=0.
 dependency_is_lost :
   interval_equal
     (subtract_interval (closed_interval (whole 0) (whole 1))
-                      (closed_interval (whole 0) (whole 1)))
+                       (closed_interval (whole 0) (whole 1)))
     (closed_interval (whole (-1)) (whole 1)) = True
 dependency_is_lost = Refl
 
@@ -67,28 +68,55 @@ empty_absorbs_addition :
 empty_absorbs_addition = Refl
 
 opposite_infinite_rays_sum_all :
-  interval_equal (add_interval (above (whole 0) included)
-                              (below (whole 0) included))
-                Interval.Exact.all_numbers = True
+  interval_equal
+    (add_interval (above (whole 0) included)
+                  (below (whole 0) included))
+    Interval.Exact.all_numbers = True
 opposite_infinite_rays_sum_all = Refl
 
 intersection_open_boundary_empty :
-  interval_equal (intersect_interval (closed_interval (whole 0) (whole 1))
-                                   (left_open_interval (whole 1) (whole 2)))
-                no_points = True
+  interval_equal
+    (intersect_interval (closed_interval (whole 0) (whole 1))
+                        (left_open_interval (whole 1) (whole 2)))
+    no_points = True
 intersection_open_boundary_empty = Refl
 
 intersection_singleton :
-  interval_equal (intersect_interval (closed_interval (whole 0) (whole 1))
-                                   (closed_interval (whole 1) (whole 2)))
-                (closed_interval (whole 1) (whole 1)) = True
+  interval_equal
+    (intersect_interval (closed_interval (whole 0) (whole 1))
+                        (closed_interval (whole 1) (whole 2)))
+    (closed_interval (whole 1) (whole 1)) = True
 intersection_singleton = Refl
 
 exact_quarters :
-  rational_equal (add_rational (over 1 (OnePlus 3)) (over 1 (OnePlus 3)))
-           (over 1 (OnePlus 1)) = True
+  rational_equal
+    (add_rational (over 1 (OnePlus 3)) (over 1 (OnePlus 3)))
+    (over 1 (OnePlus 1)) = True
 exact_quarters = Refl
 
+-- Direct construction is possible only when the requested span carries a
+-- proof of validity. `Oh` typechecks here because 1 < 3 reduces to True.
+direct_strict_span :
+  interval_equal
+    (points_between
+      (Span
+        (lower_at (whole 1) included)
+        (upper_at (whole 3) included)
+        (StrictFinite Oh)))
+    (closed_interval (whole 1) (whole 3)) = True
+direct_strict_span = Refl
+
+-- Equal endpoints form a nonempty interval only through the closed-singleton
+-- evidence constructor.
+direct_closed_singleton :
+  interval_equal
+    (points_between
+      (Span
+        (lower_at (whole 2) included)
+        (upper_at (whole 2) included)
+        (EqualClosed Oh)))
+    (closed_interval (whole 2) (whole 2)) = True
+direct_closed_singleton = Refl
 
 main : IO ()
 main = putStrLn "Idriç exact rational interval checks: PASS"
