@@ -192,7 +192,9 @@ public export
 rational_equivalent_reflexive :
   (value : OrderedRational) →
   RationalEquivalent value value
-rational_equivalent_reflexive (Fraction numerator denominator) = Refl
+rational_equivalent_reflexive (Fraction numerator denominator) =
+  difference_equivalent_reflexive
+    (scale_difference (positive_value denominator) numerator)
 
 public export
 rational_equivalent_symmetric :
@@ -200,7 +202,14 @@ rational_equivalent_symmetric :
   RationalEquivalent left right →
   RationalEquivalent right left
 rational_equivalent_symmetric
-  (Fraction _ _)
-  (Fraction _ _)
+  (Fraction left_numerator left_denominator)
+  (Fraction right_numerator right_denominator)
   equivalent =
-    sym equivalent
+    difference_equivalent_symmetric
+      (scale_difference
+        (positive_value right_denominator)
+        left_numerator)
+      (scale_difference
+        (positive_value left_denominator)
+        right_numerator)
+      equivalent
