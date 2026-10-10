@@ -35,7 +35,7 @@ reciprocal_assuming_nonzero : ExactRational → ExactRational
 reciprocal_assuming_nonzero (Ratio numerator denominator) =
   let reciprocal_numerator =
         if numerator < 0
-          then 0 − denominator_value denominator
+          then -(denominator_value denominator)
           else denominator_value denominator
   in Ratio
        reciprocal_numerator
