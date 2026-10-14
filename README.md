@@ -6,6 +6,8 @@ An interval represents a connected, convex subset of an ordered line, potentiall
 
 Broader uncertainty may involve indefinitely many interacting or nested ε-like regions, unknown resolution conditions, unknown containment depth, and strategically distorted information. No such general theory is claimed or forced into this library.
 
+The package does not treat the usual numeric progression as fundamental interval structure. Addition, pointwise multiplication, tensor product, matrix action, convolution, intersection, pullback, and change of basis represent different mathematical constructions. See [What operations on intervals mean](docs/OPERATION-ONTOLOGY.md).
+
 ## Core structure
 
 The core package contains interval structure and operations that do not require treating a second interval as a multiplicative factor:
@@ -55,11 +57,12 @@ See [`docs/SCALAR-ACTION-AND-POINTWISE-PRODUCT.md`](docs/SCALAR-ACTION-AND-POINT
 - `intervals-idric-core.ipkg`: core package without interval-by-interval multiplication.
 - `intervals-idric.ipkg`: aggregate package including optional product, reciprocal, division and proof experiments.
 - `reference-code/`: pinned Lean Mathlib and Isabelle/HOL AFP references with integrity checks.
+- `docs/OPERATION-ONTOLOGY.md`: mathematical justification for interval operations and their boundaries.
 - `docs/SEMANTICS.md`: mathematical meaning and limitations.
 - `docs/IDRIC-PRIMARY.md`: language ownership and verification boundary.
 
 The repository deliberately has no second implementation in generic Idris 2. Idriç is the maintained language and acceptance boundary. A host-level Idriç pass still does not establish direct Android, ARM, DEX, GPU, or other target-backend execution.
 
-Concrete `Refl` fixtures establish particular reductions, not every general correctness theorem listed in [issue #1](https://github.com/dilapidated-shed/intervals.idr/issues/1) and the reference-code proof map.
+Concrete `Refl` fixtures establish particular reductions, not every general correctness theorem listed in [issue #1](https://github.com/dilapidated-shed/intervals.idr/issues/1) and the reference-code proof map. Several existing universal statements concern proof-model scalars; a checked bridge to production `ExactRational` remains necessary before claiming proofs of production arithmetic.
 
 See also [Idriç issue #30](https://github.com/isomorphisms/Idric/issues/30).
