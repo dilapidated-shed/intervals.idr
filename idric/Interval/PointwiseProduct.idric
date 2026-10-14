@@ -1,0 +1,20 @@
+module Interval.PointwiseProduct
+
+import Interval.Exact
+import Interval.Product
+
+%unbound_implicits off
+
+-- This operation is the direct image of A × B under scalar multiplication:
+--
+--   { left × right | left ∈ A, right ∈ B }.
+--
+-- It is not part of the intrinsic interval structure merely because both
+-- inputs happen to be intervals. Callers should choose it only when the
+-- underlying quantities themselves have a meaningful scalar product.
+public export
+pointwise_product :
+  exact_interval →
+  exact_interval →
+  interval_product_result
+pointwise_product = multiply_intervals

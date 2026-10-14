@@ -1,0 +1,6 @@
+package intervals-idric-core
+version = 0.1.0
+sourcedir = "idric"
+modules = Interval.Exact, Interval.Relation, Interval.Membership, Interval.MembershipCheck, Interval.ScalarAction, Interval.ScalarActionCheck, Interval.Check
+main = Interval.Check
+executable = "interval-idric-core-tests"
